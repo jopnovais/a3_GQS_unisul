@@ -18,17 +18,19 @@ public class AlunoDAO {
     }
 
     public int maiorID() throws SQLException {
-
         int maiorID = 0;
-        try {
-            Statement stmt = this.getConexao().createStatement();
-            ResultSet res = stmt.executeQuery("SELECT MAX(id) id FROM tb_alunos");
-            res.next();
-            maiorID = res.getInt("id");
+        Connection conn = this.getConexao();
+        if (conn == null) {
+            return maiorID;
+        }
 
-            stmt.close();
+        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT MAX(id) id FROM tb_alunos")) {
 
+            if (res.next()) {
+                maiorID = res.getInt("id");
+            }
         } catch (SQLException ex) {
+            // Log error if needed
         }
         return maiorID;
     }
@@ -49,8 +51,8 @@ public class AlunoDAO {
 
             connection = DriverManager.getConnection(url, user, password);
 
-            // Testando..
-            if (connection != null) {
+            // Verifica se a conexão é válida
+            if (connection.isValid(1)) {
                 System.out.println("Status: Conectado!");
             } else {
                 System.out.println("Status: N�O CONECTADO!");
@@ -70,14 +72,16 @@ public class AlunoDAO {
 
     // Retorna a Lista de Alunos(objetos)
     public ArrayList getMinhaLista() {
-
         MinhaLista.clear(); // Limpa o arrayList
 
-        try {
-            Statement stmt = this.getConexao().createStatement();
-            ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos");
-            while (res.next()) {
+        Connection conn = this.getConexao();
+        if (conn == null) {
+            return MinhaLista;
+        }
 
+        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos")) {
+
+            while (res.next()) {
                 String curso = res.getString("curso");
                 int fase = res.getInt("fase");
                 int id = res.getInt("id");
@@ -85,12 +89,8 @@ public class AlunoDAO {
                 int idade = res.getInt("idade");
 
                 Aluno objeto = new Aluno(curso, fase, id, nome, idade);
-
                 MinhaLista.add(objeto);
             }
-
-            stmt.close();
-
         } catch (SQLException ex) {
         }
 
@@ -101,9 +101,12 @@ public class AlunoDAO {
     public boolean InsertAlunoBD(Aluno objeto) {
         String sql = "INSERT INTO tb_alunos(id,nome,idade,curso,fase) VALUES(?,?,?,?,?)";
 
-        try {
-            PreparedStatement stmt = this.getConexao().prepareStatement(sql);
+        Connection conn = this.getConexao();
+        if (conn == null) {
+            throw new RuntimeException("Não foi possível conectar ao banco de dados");
+        }
 
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, objeto.getId());
             stmt.setString(2, objeto.getNome());
             stmt.setInt(3, objeto.getIdade());
@@ -111,37 +114,37 @@ public class AlunoDAO {
             stmt.setInt(5, objeto.getFase());
 
             stmt.execute();
-            stmt.close();
-
             return true;
-
         } catch (SQLException erro) {
             throw new RuntimeException(erro);
         }
-
     }
 
     // Deleta um aluno específico pelo seu campo ID
     public boolean DeleteAlunoBD(int id) {
-        try {
-            Statement stmt = this.getConexao().createStatement();
-            stmt.executeUpdate("DELETE FROM tb_alunos WHERE id = " + id);
-            stmt.close();
-
-        } catch (SQLException erro) {
+        Connection conn = this.getConexao();
+        if (conn == null) {
+            return false;
         }
 
-        return true;
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("DELETE FROM tb_alunos WHERE id = " + id);
+            return true;
+        } catch (SQLException erro) {
+            return false;
+        }
     }
 
     // Edita um aluno específico pelo seu campo ID
     public boolean UpdateAlunoBD(Aluno objeto) {
-
         String sql = "UPDATE tb_alunos set nome = ? ,idade = ? ,curso = ? ,fase = ? WHERE id = ?";
 
-        try {
-            PreparedStatement stmt = this.getConexao().prepareStatement(sql);
+        Connection conn = this.getConexao();
+        if (conn == null) {
+            throw new RuntimeException("Não foi possível conectar ao banco de dados");
+        }
 
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, objeto.getNome());
             stmt.setInt(2, objeto.getIdade());
             stmt.setString(3, objeto.getCurso());
@@ -149,33 +152,29 @@ public class AlunoDAO {
             stmt.setInt(5, objeto.getId());
 
             stmt.execute();
-            stmt.close();
-
             return true;
-
         } catch (SQLException erro) {
             throw new RuntimeException(erro);
         }
-
     }
 
     public Aluno carregaAluno(int id) {
-
         Aluno objeto = new Aluno();
         objeto.setId(id);
 
-        try {
-            Statement stmt = this.getConexao().createStatement();
-            ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos WHERE id = " + id);
-            res.next();
+        Connection conn = this.getConexao();
+        if (conn == null) {
+            return objeto;
+        }
 
-            objeto.setNome(res.getString("nome"));
-            objeto.setIdade(res.getInt("idade"));
-            objeto.setCurso(res.getString("curso"));
-            objeto.setFase(res.getInt("fase"));
+        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos WHERE id = " + id)) {
 
-            stmt.close();
-
+            if (res.next()) {
+                objeto.setNome(res.getString("nome"));
+                objeto.setIdade(res.getInt("idade"));
+                objeto.setCurso(res.getString("curso"));
+                objeto.setFase(res.getInt("fase"));
+            }
         } catch (SQLException erro) {
         }
         return objeto;
