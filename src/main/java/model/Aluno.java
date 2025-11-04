@@ -1,42 +1,106 @@
 package model;
 
-public class Aluno {
+import java.util.*;
+import DAO.AlunoDAO;
+import java.sql.SQLException;
 
-    private int id;
-    private String nome;
-    private int idade;
-    private String matricula;
+public class Aluno extends Pessoa {
 
-    /* Getters e Setters */
-    public int getId() {
-        return id;
+    // Atributos
+    private String curso;
+    private int fase;
+    private final AlunoDAO dao;
+
+    // Método Construtor de Objeto Vazio
+    public Aluno() {
+        this.dao = new AlunoDAO(); // inicializado n�o importa em qual construtor
     }
 
-    public void setId(int id) {
-        this.id = id;
+    // Método Construtor de Objeto, inserindo dados
+    public Aluno(String curso, int fase) {
+        this.curso = curso;
+        this.fase = fase;
+        this.dao = new AlunoDAO(); // inicializado n�o importa em qual construtor
     }
 
-    public String getNome() {
-        return nome;
+    // Método Construtor usando tamb�m o construtor da SUPERCLASSE
+    public Aluno(String curso, int fase, int id, String nome, int idade) {
+        super(id, nome, idade);
+        this.curso = curso;
+        this.fase = fase;
+        this.dao = new AlunoDAO(); // inicializado n�o importa em qual construtor
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    // Métodos GET e SET
+    public String getCurso() {
+        return curso;
     }
 
-    public int getIdade() {
-        return idade;
+    public void setCurso(String curso) {
+        this.curso = curso;
     }
 
-    public void setIdade(int idade) {
-        this.idade = idade;
+    public int getFase() {
+        return fase;
     }
 
-    public String getMatricula() {
-        return matricula;
+    public void setFase(int fase) {
+        this.fase = fase;
     }
 
-    public void setMatricula(String matricula) {
-        this.matricula = matricula;
+    // Override necess�rio para poder retornar os dados de Pessoa no toString para aluno.
+    @Override
+    public String toString() {
+        return "\n ID: " + this.getId()
+                + "\n Nome: " + this.getNome()
+                + "\n Idade: " + this.getIdade()
+                + "\n Curso: " + this.getCurso()
+                + "\n Fase:" + this.getFase()
+                + "\n -----------";
+    }
+
+    /*
+    
+        ABAIXO OS M�TODOS PARA USO JUNTO COM O DAO
+        SIMULANDO A ESTRUTURA EM CAMADAS PARA USAR COM BANCOS DE DADOS.
+    
+     */
+    // Retorna a Lista de Alunos (objetos)
+    public ArrayList getMinhaLista() {
+        //return AlunoDAO.MinhaLista;
+        return dao.getMinhaLista();
+    }
+
+    // Cadastra novo aluno
+    public boolean InsertAlunoBD(String curso, int fase, String nome, int idade) throws SQLException {
+        int id = this.maiorID() + 1;
+        Aluno objeto = new Aluno(curso, fase, id, nome, idade);
+        dao.InsertAlunoBD(objeto);
+        return true;
+
+    }
+
+    // Deleta um aluno espec�fico pelo seu campo ID
+    public boolean DeleteAlunoBD(int id) {
+        dao.DeleteAlunoBD(id);
+        return true;
+    }
+
+    // Edita um aluno espec�fico pelo seu campo ID
+    public boolean UpdateAlunoBD(String curso, int fase, int id, String nome, int idade) {
+        Aluno objeto = new Aluno(curso, fase, id, nome, idade);
+        dao.UpdateAlunoBD(objeto);
+        return true;
+    }
+
+    // carrega dados de um aluno espec�fico pelo seu ID
+    public Aluno carregaAluno(int id) {
+        dao.carregaAluno(id);
+        return null;
+    }
+
+    // retorna o maior ID da nossa base de dados
+    public int maiorID() throws SQLException {
+        return dao.maiorID();
     }
 }
