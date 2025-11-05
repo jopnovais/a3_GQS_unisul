@@ -104,7 +104,7 @@ public class GerenciaProfessores extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Cadastro de Professores");
 
-        refresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/View/refresh.png"))); // NOI18N
+        refresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/view/refresh.png"))); // NOI18N
         refresh.setText("  Atualizar tabela");
         refresh.setToolTipText("CTRL+R");
         refresh.addActionListener(new java.awt.event.ActionListener() {
