@@ -15,8 +15,9 @@ import java.sql.SQLException;
 public class TestAlunoDAO extends TestCase {
 
     private AlunoDAO alunoDAO;
+    // Altere aqui com suas credenciais do MySQL
     private static final String TEST_USER = "root";
-    private static final String TEST_PASSWORD = "Jotap@0310";
+    private static final String TEST_PASSWORD = "@13Dodo13";
 
     @Override
     protected void setUp() throws Exception {
