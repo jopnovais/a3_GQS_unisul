@@ -14,13 +14,8 @@ class MensagensTest {
     @Test
     @DisplayName("Deve criar a exceção com a mensagem correta")
     void testMensagensException() {
-        // Arrange
         String mensagemErro = "Este é um erro de teste";
-
-        // Act
         Mensagens excecao = new Mensagens(mensagemErro);
-
-        // Assert
         // Verifica se a mensagem armazenada na exceção é a correta
         assertEquals(mensagemErro, excecao.getMessage());
     }

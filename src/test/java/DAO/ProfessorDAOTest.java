@@ -22,7 +22,7 @@ class ProfessorDAOTest {
 
     // IMPORTANTE: Configure com suas credenciais de admin do MySQL
     private static final String TEST_USER = "root";
-    private static final String TEST_PASSWORD = "@13Dodo13"; // Mude para a sua senha
+    private static final String TEST_PASSWORD = "Password"; // Mude para a sua senha
 
     private ProfessorDAO professorDAO;
     private static final int ID_TESTE = 8888888; // ID de teste seguro (diferente do Aluno)
@@ -42,16 +42,12 @@ class ProfessorDAOTest {
     @Test
     @DisplayName("1. Deve INSERIR um professor de teste")
     void deveInserirProfessor() throws SQLException {
-        // Arrange
         Professor profNovo = new Professor(
                 "Campus Teste", "123.456.789-00", "9999-9999",
                 "Doutorado", 5000.0, ID_TESTE, "Professor Teste JUnit", 45
         );
-
-        // Act
         boolean inserido = professorDAO.InsertProfessorBD(profNovo);
 
-        // Assert
         assertTrue(inserido, "Falha ao inserir o professor de teste");
 
         // Verifica se realmente foi salvo
@@ -62,16 +58,12 @@ class ProfessorDAOTest {
     @Test
     @DisplayName("2. Deve ATUALIZAR um professor de teste")
     void deveAtualizarProfessor() throws SQLException {
-        // Arrange
         Professor profAtualizado = new Professor(
                 "Campus ATUALIZADO", "000.000.000-00", "1111-1111",
                 "Mestrado", 6500.0, ID_TESTE, "Professor Teste Atualizado", 46
         );
-
-        // Act
         boolean atualizado = professorDAO.UpdateProfessorBD(profAtualizado);
 
-        // Assert
         assertTrue(atualizado, "Falha ao atualizar o professor de teste");
 
         // Verifica se foi atualizado
@@ -84,10 +76,9 @@ class ProfessorDAOTest {
     @Test
     @DisplayName("3. Deve DELETAR um professor de teste")
     void deveDeletarProfessor() throws SQLException {
-        // Act
+
         boolean deletado = professorDAO.DeleteProfessorBD(ID_TESTE);
 
-        // Assert
         assertTrue(deletado, "Falha ao deletar o professor de teste");
 
         // Verifica se foi deletado

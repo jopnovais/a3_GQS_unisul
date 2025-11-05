@@ -16,11 +16,9 @@ class PessoaTest {
     @Test
     @DisplayName("Deve criar Pessoa com construtor completo")
     void testConstrutorCompleto() {
-        // Arrange
         // Usa Aluno (que é uma Pessoa) para instanciar a classe abstrata
         Pessoa pessoa = new Aluno("", 0, 10, "Nome Teste", 30);
 
-        // Assert
         assertEquals(10, pessoa.getId());
         assertEquals("Nome Teste", pessoa.getNome());
         assertEquals(30, pessoa.getIdade());
@@ -29,15 +27,12 @@ class PessoaTest {
     @Test
     @DisplayName("Deve setar e obter atributos (Getters/Setters)")
     void testGettersSetters() {
-        // Arrange
         Pessoa pessoa = new Aluno(); // Instancia um Aluno (que é uma Pessoa)
 
-        // Act
         pessoa.setId(99);
         pessoa.setNome("Usuario");
         pessoa.setIdade(25);
 
-        // Assert
         assertEquals(99, pessoa.getId());
         assertEquals("Usuario", pessoa.getNome());
         assertEquals(25, pessoa.getIdade());
