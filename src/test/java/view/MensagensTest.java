@@ -12,6 +12,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Teste Unitário - Mensagens (Exceção)")
 class MensagensTest {
 
+    @BeforeAll
+    static void setHeadlessMode() {
+        System.setProperty("java.awt.headless", "true");
+    }
+
     @Test
     @DisplayName("Deve criar a exceção com a mensagem correta")
     void testMensagensException() {

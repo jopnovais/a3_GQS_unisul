@@ -17,6 +17,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Teste Unitário - CadastroAluno (via Reflection)")
 class CadastroAlunoTest {
 
+    @BeforeAll
+    static void setHeadlessMode() {
+        System.setProperty("java.awt.headless", "true");
+    }
+
     private CadastroAluno instanciaCadastroAluno;
 
     @BeforeEach
