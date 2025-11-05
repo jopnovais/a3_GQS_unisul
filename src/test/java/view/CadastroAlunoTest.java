@@ -70,10 +70,8 @@ class CadastroAlunoTest {
         Method metodoPrivado = CadastroAluno.class.getDeclaredMethod("calculaIdade", Date.class);
         metodoPrivado.setAccessible(true);
 
-        // --- Act ---
         Integer idadeCalculada = (Integer) metodoPrivado.invoke(instanciaCadastroAluno, dataNascimento);
 
-        // --- Assert ---
         // A pessoa ainda tem 19, pois o aniversário é amanhã
         assertEquals(19, idadeCalculada, "A idade calculada deveria ser 19");
     }

@@ -24,7 +24,7 @@ class AlunoDAOTest {
 
     // IMPORTANTE: Configure com suas credenciais de admin do MySQL
     private static final String TEST_USER = "root";
-    private static final String TEST_PASSWORD = "@13Dodo13"; // Mude para a sua senha
+    private static final String TEST_PASSWORD = "Password"; // Mude para a sua senha
 
     private AlunoDAO alunoDAO;
     private static final int ID_TESTE = 9999999; // ID de teste seguro
@@ -56,13 +56,10 @@ class AlunoDAOTest {
     @Test
     @DisplayName("2. Deve INSERIR um aluno de teste")
     void deveInserirAluno() throws SQLException {
-        // Arrange
         Aluno alunoNovo = new Aluno("Curso Teste", 1, ID_TESTE, "Aluno Teste JUnit", 25);
 
-        // Act
         boolean inserido = alunoDAO.InsertAlunoBD(alunoNovo);
 
-        // Assert
         assertTrue(inserido, "Falha ao inserir o aluno de teste");
 
         // Verifica se realmente foi salvo
@@ -73,13 +70,11 @@ class AlunoDAOTest {
     @Test
     @DisplayName("3. Deve ATUALIZAR um aluno de teste")
     void deveAtualizarAluno() throws SQLException {
-        // Arrange
+
         Aluno alunoAtualizado = new Aluno("Curso Teste Atualizado", 2, ID_TESTE, "Aluno Teste Atualizado", 26);
 
-        // Act
         boolean atualizado = alunoDAO.UpdateAlunoBD(alunoAtualizado);
 
-        // Assert
         assertTrue(atualizado, "Falha ao atualizar o aluno de teste");
 
         // Verifica se foi atualizado
@@ -91,10 +86,8 @@ class AlunoDAOTest {
     @Test
     @DisplayName("4. Deve DELETAR um aluno de teste")
     void deveDeletarAluno() throws SQLException {
-        // Act
         boolean deletado = alunoDAO.DeleteAlunoBD(ID_TESTE);
 
-        // Assert
         assertTrue(deletado, "Falha ao deletar o aluno de teste");
 
         // Verifica se foi deletado

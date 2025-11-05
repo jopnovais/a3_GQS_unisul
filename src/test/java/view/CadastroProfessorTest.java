@@ -34,11 +34,9 @@ class CadastroProfessorTest {
         cal.add(Calendar.YEAR, -20); // 20 anos atrás
         Date dataNascimento = cal.getTime();
 
-        // Act
         Integer idadeCalculada = (Integer) invocarMetodoPrivado("calculaIdade",
                 Date.class,
                 dataNascimento);
-        // Assert
         assertEquals(20, idadeCalculada, "A idade calculada deveria ser 20");
     }
 
@@ -47,60 +45,48 @@ class CadastroProfessorTest {
     @Test
     @DisplayName("Deve validar/limpar R$ (salário)")
     void deveValidarCampoSalario() throws Exception {
-        // Arrange
         String salarioFormatado = "R$5000"; // Como vem da JFormattedTextField
 
-        // Act
         String salarioLimpo = (String) invocarMetodoPrivado("validarFormatado",
                 String.class,
                 salarioFormatado);
 
-        // Assert
         assertEquals("5000", salarioLimpo);
     }
 
     @Test
     @DisplayName("Deve validar/limpar CPF")
     void deveValidarCampoCpf() throws Exception {
-        // Arrange
         String cpfFormatado = "123.456.789-00";
 
-        // Act
         String cpfLimpo = (String) invocarMetodoPrivado("validarFormatado",
                 String.class,
                 cpfFormatado);
 
-        // Assert
         assertEquals("12345678900", cpfLimpo);
     }
 
     @Test
     @DisplayName("Deve validar/limpar Contato (telefone)")
     void deveValidarCampoContato() throws Exception {
-        // Arrange
         String contatoFormatado = "(48) 9 9999-9999";
 
-        // Act
         String contatoLimpo = (String) invocarMetodoPrivado("validarFormatado",
                 String.class,
                 contatoFormatado);
 
-        // Assert
         assertEquals("48999999999", contatoLimpo);
     }
 
     @Test
     @DisplayName("Deve retornar string vazia se não houver números")
     void deveRetornarVazioParaStringSemNumeros() throws Exception {
-        // Arrange
         String input = "abcde-@#$";
 
-        // Act
         String resultado = (String) invocarMetodoPrivado("validarFormatado",
                 String.class,
                 input);
 
-        // Assert
         assertEquals("", resultado, "Deveria retornar vazio se não houver dígitos");
     }
 
