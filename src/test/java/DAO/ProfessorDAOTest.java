@@ -22,7 +22,7 @@ class ProfessorDAOTest {
 
     // IMPORTANTE: Configure com suas credenciais de admin do MySQL
     private static final String TEST_USER = "root";
-    private static final String TEST_PASSWORD = "Password"; // Mude para a sua senha
+    private static final String TEST_PASSWORD = "@13Dodo13"; // Mude para a sua senha
 
     private ProfessorDAO professorDAO;
     private static final int ID_TESTE = 8888888; // ID de teste seguro (diferente do Aluno)
