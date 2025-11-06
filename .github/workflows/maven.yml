@@ -1,12 +1,3 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-
 name: Java CI com Maven
 
 on:
@@ -69,13 +60,23 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      # ASSUME que você tem um arquivo chamado 'schema.sql' na raiz do projeto
+      - name: Configurar o Schema do Banco de Dados
+        run: |
+          # Espera 10s para garantir que o MySQL esteja pronto para receber comandos
+          sleep 10 
+          # Executa o script SQL para criar as tabelas
+          # O comando mysql é injetado no container que está rodando
+          # ALTERE 'schema.sql' para o nome correto do seu arquivo se for diferente
+          mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql
+
       - name: Testa o projeto com Maven
         run: mvn -B test -Djava.awt.headless=true --file pom.xml
 
-  # 3. Job de Análise (SonarCloud)
+      # 3. Job de Análise (SonarCloud)
   analyze-sonar:
     runs-on: ubuntu-latest
-    needs: build-hmg # Depende de TODOS os testes da matrix passarem
+    needs: build-hmg
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Realiza o checkout do repositório
