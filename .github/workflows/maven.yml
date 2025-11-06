@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  # 1. Job de Compilação (Ambiente DEV)
+  # 1. Job de Compilação (DEV)
   build-dev:
     runs-on: ubuntu-latest
     environment:
@@ -15,30 +15,27 @@ jobs:
     steps:
       - name: Realiza o checkout do repositório
         uses: actions/checkout@v4
-
-      - name: Configura o JDK 8 (Baseline)
+      - name: Configura o JDK 8
         uses: actions/setup-java@v4
         with:
           java-version: '8'
           distribution: 'temurin'
           cache: maven
-
-      - name: Compila o projeto com Maven
+      - name: Compila o projeto
         run: mvn -B compile --file pom.xml
 
-  # 2. Job de Testes (Ambiente HMG)
-  # Roda os testes em MÚLTIPLAS versões do Java.
+  # 2. Job de Testes (HMG) - COM XVFB
   build-hmg:
     runs-on: ubuntu-latest
     environment:
       name: hmg
     needs: build-dev
-
     strategy:
       fail-fast: false
       matrix:
         java-version: [ '8', '11', '17' ]
 
+    # Serviço de Banco de Dados
     services:
       mysql:
         image: mysql:8.0
@@ -50,7 +47,7 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
-      - name: Realiza o checkout do repositório
+      - name: Realiza o checkout
         uses: actions/checkout@v4
 
       - name: Configura o JDK ${{ matrix.java-version }}
@@ -60,58 +57,53 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # ASSUME que você tem um arquivo chamado 'schema.sql' na raiz do projeto
-      - name: Configurar o Schema do Banco de Dados
+      #Instala o Monitor Virtual (Xvfb)
+      - name: Instalar Xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Configurar Schema do Banco
         run: |
-          # Espera 10s para garantir que o MySQL esteja pronto para receber comandos
           sleep 10 
-          # Executa o script SQL para criar as tabelas
-          # O comando mysql é injetado no container que está rodando
-          # ALTERE 'schema.sql' para o nome correto do seu arquivo se for diferente
           mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql
 
-      - name: Testa o projeto com Maven
-        run: mvn -B test -Djava.awt.headless=true --file pom.xml
+      - name: Testa o projeto (com Xvfb)
+        run: xvfb-run --auto-servernum mvn -B test --file pom.xml
 
-      # 3. Job de Análise (SonarCloud)
+  # 3. Job de Análise (Sonar)
   analyze-sonar:
     runs-on: ubuntu-latest
     needs: build-hmg
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Realiza o checkout do repositório
+      - name: Realiza o checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Configura o JDK 8 (Baseline para análise)
+      - name: Configura o JDK 8
         uses: actions/setup-java@v4
         with:
           java-version: '8'
           distribution: 'temurin'
           cache: maven
-
-      - name: Cache SonarQube packages
+      - name: Cache SonarQube
         uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Maven packages
+      - name: Cache Maven
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-
       - name: Analisa com SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=jopnovais_a3_GQS_unisul
 
-  # 4. Job de Empacotamento (Ambiente PRD)
+  # 4. Job de Empacotamento (PRD)
   build-prd:
     runs-on: ubuntu-latest
     environment:
@@ -119,26 +111,21 @@ jobs:
     needs: analyze-sonar
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - name: Realiza o checkout do repositório
+      - name: Realiza o checkout
         uses: actions/checkout@v4
-
-      - name: Configura o JDK 8 (Baseline para empacotar)
+      - name: Configura o JDK 8
         uses: actions/setup-java@v4
         with:
           java-version: '8'
           distribution: 'temurin'
           cache: maven
-
-      - name: Empacota o projeto com Maven
+      - name: Empacota o projeto
         run: mvn -B package --file pom.xml -DskipTests
-
-      - name: Cria uma pasta temporária de downloads de artefatos
+      - name: Cria pasta de artefatos
         run: mkdir staging
-
-      - name: Copia os artefatos a serem publicados na pasta temporária
+      - name: Copia o JAR
         run: cp target/*jar-with-dependencies.jar staging
-
-      - name: Publica o artefato (JAR)
+      - name: Publica o artefato
         uses: actions/upload-artifact@v4
         with:
           name: Package
