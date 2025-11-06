@@ -6,15 +6,17 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+
+name: Java CI com Maven
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
 jobs:
-  # Jobs do ambiente de desenvolvimento
+  # 1. Job de Compilação (Ambiente DEV)
   build-dev:
     runs-on: ubuntu-latest
     environment:
@@ -22,34 +24,71 @@ jobs:
     steps:
       - name: Realiza o checkout do repositório
         uses: actions/checkout@v4
-      - name: Configura o JDK 18
+
+      - name: Configura o JDK 8 (Baseline)
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
-          distribution: "temurin"
+          java-version: '8'
+          distribution: 'temurin'
           cache: maven
+
       - name: Compila o projeto com Maven
         run: mvn -B compile --file pom.xml
 
-  # Jobs do ambiente de homologação
+  # 2. Job de Testes (Ambiente HMG)
+  # Roda os testes em MÚLTIPLAS versões do Java.
   build-hmg:
     runs-on: ubuntu-latest
     environment:
       name: hmg
     needs: build-dev
+
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [ '8', '11', '17' ]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: db_escola
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      - name: Realiza o checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configura o JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Testa o projeto com Maven
+        run: mvn -B test -Djava.awt.headless=true --file pom.xml
+
+  # 3. Job de Análise (SonarCloud)
+  analyze-sonar:
+    runs-on: ubuntu-latest
+    needs: build-hmg # Depende de TODOS os testes da matrix passarem
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Realiza o checkout do repositório
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Configura o JDK 17
+
+      - name: Configura o JDK 8 (Baseline para análise)
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
-          distribution: "temurin"
+          java-version: '8'
+          distribution: 'temurin'
           cache: maven
-      - name: Testa o projeto com Maven
-        run: mvn -B test --file pom.xml
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4
@@ -57,42 +96,48 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+
       - name: Cache Maven packages
         uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-      - name: Build and analyze
+
+      - name: Analisa com SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=jopnovais_a3_GQS_unisul
 
-  # Jobs do ambiente de produção
+  # 4. Job de Empacotamento (Ambiente PRD)
   build-prd:
     runs-on: ubuntu-latest
     environment:
       name: prd
-    needs: build-hmg
+    needs: analyze-sonar
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Realiza o checkout do repositório
         uses: actions/checkout@v4
-      - name: Configura o JDK 17
+
+      - name: Configura o JDK 8 (Baseline para empacotar)
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
-          distribution: "temurin"
+          java-version: '8'
+          distribution: 'temurin'
           cache: maven
-      # Executa o empacotamento do projeto com o Maven.
-      # O parâmetro -DskipTests pula os testes pois já foram executados no ambiente anterior.
+
       - name: Empacota o projeto com Maven
         run: mvn -B package --file pom.xml -DskipTests
-      # Cria o artefato de download
-      - name: Crie uma pasta temporária de downloads de artefatos
+
+      - name: Cria uma pasta temporária de downloads de artefatos
         run: mkdir staging
+
       - name: Copia os artefatos a serem publicados na pasta temporária
         run: cp target/*jar-with-dependencies.jar staging
-      - name: Usa Upload Artifact do GitHub Action
+
+      - name: Publica o artefato (JAR)
         uses: actions/upload-artifact@v4
         with:
           name: Package
