@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class AlunoDAOTest {
 
     // IMPORTANTE: Configure com suas credenciais de admin do MySQL
-    private static final String TEST_USER = "root";
-    private static final String TEST_PASSWORD = "password"; // Mude para a sua senha
+    private static final String TEST_USER = "admin";
+    private static final String TEST_PASSWORD = "admin"; // Mude para a sua senha
 
     private AlunoDAO alunoDAO;
     private static final int ID_TESTE = 9999999; // ID de teste seguro
