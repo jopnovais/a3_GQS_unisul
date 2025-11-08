@@ -61,19 +61,60 @@ jobs:
       - name: Instalar Xvfb
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
+      - name: Instalar cliente MySQL
+        run: sudo apt-get install -y default-mysql-client
+
       - name: Configurar Schema do Banco
         run: |
           sleep 10 
-          mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql
+          mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql || mysql -h 127.0.0.1 -u root -ppassword db_escola < db_escola.sql
 
-      - name: Testa o projeto (com Xvfb)
-        run: xvfb-run --auto-servernum mvn -B test --file pom.xml
+      - name: Testa o projeto e gera relatórios (com Xvfb)
+        # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
+        # usando TelaLogin.userDB e TelaLogin.passwordDB (root/password)
+        run: xvfb-run --auto-servernum mvn -B clean test surefire-report:report jacoco:report --file pom.xml
+
+      - name: Publicar Relatório de Testes (Surefire)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: surefire-report-java-${{ matrix.java-version }}
+          path: target/site/surefire-report.html
+          retention-days: 30
+
+      - name: Publicar Relatório de Cobertura (JaCoCo)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-report-java-${{ matrix.java-version }}
+          path: target/site/jacoco/
+          retention-days: 30
+
+      - name: Publicar Relatório XML de Cobertura
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-xml-java-${{ matrix.java-version }}
+          path: target/site/jacoco/jacoco.xml
+          retention-days: 30
 
   # 3. Job de Análise (Sonar)
   analyze-sonar:
     runs-on: ubuntu-latest
     needs: build-hmg
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    # Serviço de Banco de Dados
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: db_escola
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+    
     steps:
       - name: Realiza o checkout
         uses: actions/checkout@v4
@@ -97,13 +138,55 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
+      
+      - name: Instalar cliente MySQL
+        run: sudo apt-get install -y default-mysql-client
+
+      - name: Configurar Schema do Banco
+        run: |
+          sleep 10 
+          mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql || mysql -h 127.0.0.1 -u root -ppassword db_escola < db_escola.sql
+      
+      - name: Executa testes e gera relatórios
+        # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
+        # usando TelaLogin.userDB e TelaLogin.passwordDB (root/password)
+        run: mvn -B clean test surefire-report:report jacoco:report --file pom.xml
+      
       - name: Analisa com SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=jopnovais_a3_GQS_unisul
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=jopnovais_a3_GQS_unisul -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
-  # 4. Job de Empacotamento (PRD)
+  # 4. Job de Resumo de Testes
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: build-hmg
+    if: always()
+    steps:
+      - name: Baixar todos os relatórios de testes
+        uses: actions/download-artifact@v4
+        with:
+          pattern: surefire-report-*
+          merge-multiple: false
+      
+      - name: Baixar todos os relatórios de cobertura
+        uses: actions/download-artifact@v4
+        with:
+          pattern: jacoco-report-*
+          merge-multiple: false
+      
+      - name: Publicar Relatório de Testes Consolidado
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports-consolidated
+          path: |
+            **/surefire-report.html
+            **/jacoco/
+          retention-days: 90
+
+  # 5. Job de Empacotamento (PRD)
   build-prd:
     runs-on: ubuntu-latest
     environment:
@@ -130,3 +213,4 @@ jobs:
         with:
           name: Package
           path: staging
+          retention-days: 90
