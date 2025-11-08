@@ -8,7 +8,7 @@ on:
 
 jobs:
   # 1. Job de Compilação (DEV)
-  build-dev:
+  compilar-projeto:
     runs-on: ubuntu-latest
     environment:
       name: dev
@@ -24,12 +24,12 @@ jobs:
       - name: Compila o projeto
         run: mvn -B compile --file pom.xml
 
-  # 2. Job de Testes (HMG) - COM XVFB
-  build-hmg:
+  # 2. Job de Testes de Compatibilidade Java - COM XVFB
+  testes-compatibilidade-java:
     runs-on: ubuntu-latest
     environment:
       name: hmg
-    needs: build-dev
+    needs: compilar-projeto
     strategy:
       fail-fast: false
       matrix:
@@ -78,34 +78,61 @@ jobs:
         # usando TelaLogin.userDB e TelaLogin.passwordDB (admin/admin)
         run: xvfb-run --auto-servernum mvn -B clean test surefire-report:report jacoco:report --file pom.xml
 
-      - name: Publicar Relatório de Testes (Surefire)
+      - name: Preparar relatórios HTML com estilos
+        if: always()
+        run: |
+          mkdir -p reports-html/surefire reports-html/jacoco
+          # Copiar relatório Surefire com estrutura de diretórios mantida
+          if [ -f target/site/surefire-report.html ]; then
+            cp target/site/surefire-report.html reports-html/surefire/
+            # Copiar recursos CSS e imagens mantendo estrutura
+            if [ -d target/site/css ]; then
+              cp -r target/site/css reports-html/surefire/
+            fi
+            if [ -d target/site/images ]; then
+              cp -r target/site/images reports-html/surefire/
+            fi
+          fi
+          # Copiar relatório JaCoCo completo com todos os recursos
+          if [ -d target/site/jacoco ]; then
+            cp -r target/site/jacoco/* reports-html/jacoco/
+            # Garantir que os recursos do JaCoCo estejam presentes
+            if [ -d target/site/jacoco/jacoco-resources ]; then
+              cp -r target/site/jacoco/jacoco-resources reports-html/jacoco/ 2>/dev/null || true
+            fi
+          fi
+
+      - name: Publicar Relatório de Testes HTML (Surefire)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: surefire-report-java-${{ matrix.java-version }}
-          path: target/site/surefire-report.html
+          name: relatorio-testes-java-${{ matrix.java-version }}
+          path: reports-html/surefire/
           retention-days: 30
+          if-no-files-found: ignore
 
-      - name: Publicar Relatório de Cobertura (JaCoCo)
+      - name: Publicar Relatório de Cobertura HTML (JaCoCo)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: jacoco-report-java-${{ matrix.java-version }}
-          path: target/site/jacoco/
+          name: relatorio-cobertura-java-${{ matrix.java-version }}
+          path: reports-html/jacoco/
           retention-days: 30
+          if-no-files-found: ignore
 
-      - name: Publicar Relatório XML de Cobertura
+      - name: Publicar Relatório XML de Cobertura (para SonarCloud)
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: jacoco-xml-java-${{ matrix.java-version }}
           path: target/site/jacoco/jacoco.xml
           retention-days: 30
+          if-no-files-found: ignore
 
-  # 3. Job de Análise (Sonar)
-  analyze-sonar:
+  # 3. Job de Análise de Qualidade de Código (SonarCloud)
+  analise-qualidade-codigo:
     runs-on: ubuntu-latest
-    needs: build-hmg
+    needs: testes-compatibilidade-java
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     # Serviço de Banco de Dados
@@ -166,40 +193,76 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=jopnovais_a3_GQS_unisul -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
 
-  # 4. Job de Resumo de Testes
-  test-summary:
+  # 4. Job de Consolidação de Relatórios de Testes
+  consolidar-relatorios-testes:
     runs-on: ubuntu-latest
-    needs: build-hmg
+    needs: testes-compatibilidade-java
     if: always()
     steps:
-      - name: Baixar todos os relatórios de testes
+      - name: Baixar todos os relatórios de testes HTML
         uses: actions/download-artifact@v4
         with:
-          pattern: surefire-report-*
+          pattern: relatorio-testes-*
           merge-multiple: false
+          path: reports-consolidados/testes
       
-      - name: Baixar todos os relatórios de cobertura
+      - name: Baixar todos os relatórios de cobertura HTML
         uses: actions/download-artifact@v4
         with:
-          pattern: jacoco-report-*
+          pattern: relatorio-cobertura-*
           merge-multiple: false
+          path: reports-consolidados/cobertura
       
-      - name: Publicar Relatório de Testes Consolidado
+      - name: Organizar relatórios HTML consolidados
+        if: always()
+        run: |
+          mkdir -p reports-consolidados/html/surefire reports-consolidados/html/jacoco
+          # Copiar relatórios mantendo estrutura de diretórios para recursos CSS/JS
+          if [ -d reports-consolidados/testes ]; then
+            find reports-consolidados/testes -type f -name "*.html" -exec cp {} reports-consolidados/html/surefire/ \;
+            find reports-consolidados/testes -type d -name "css" -exec cp -r {} reports-consolidados/html/surefire/ \;
+            find reports-consolidados/testes -type d -name "images" -exec cp -r {} reports-consolidados/html/surefire/ \;
+          fi
+          if [ -d reports-consolidados/cobertura ]; then
+            cp -r reports-consolidados/cobertura/* reports-consolidados/html/jacoco/ 2>/dev/null || true
+          fi
+          # Criar índice HTML simples para navegação
+          cat > reports-consolidados/html/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Relatórios de Testes - SisUni</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+              h1 { color: #333; }
+              .report-link { display: block; padding: 10px; margin: 5px 0; background: white; 
+                            border-left: 4px solid #4CAF50; text-decoration: none; color: #333; }
+              .report-link:hover { background: #f0f0f0; }
+            </style>
+          </head>
+          <body>
+            <h1>Relatórios de Testes - SisUni</h1>
+            <a href="surefire/surefire-report.html" class="report-link">📊 Relatório de Testes (Surefire)</a>
+            <a href="jacoco/index.html" class="report-link">📈 Relatório de Cobertura (JaCoCo)</a>
+          </body>
+          </html>
+          EOF
+      
+      - name: Publicar Relatórios HTML Consolidados
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-reports-consolidated
-          path: |
-            **/surefire-report.html
-            **/jacoco/
+          name: relatorios-consolidados-html
+          path: reports-consolidados/html/
           retention-days: 90
+          if-no-files-found: ignore
 
-  # 5. Job de Empacotamento (PRD)
-  build-prd:
+  # 5. Job de Empacotamento da Aplicação (PRD)
+  empacotar-aplicacao:
     runs-on: ubuntu-latest
     environment:
       name: prd
-    needs: analyze-sonar
+    needs: analise-qualidade-codigo
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Realiza o checkout
