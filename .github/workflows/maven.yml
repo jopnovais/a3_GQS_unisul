@@ -40,11 +40,13 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_admin_PASSWORD: admin
+          MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: db_escola
+          MYSQL_USER: admin
+          MYSQL_PASSWORD: admin
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysqladmin ping -u admin -padmin" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - name: Realiza o checkout
@@ -65,9 +67,11 @@ jobs:
         run: sudo apt-get install -y default-mysql-client
 
       - name: Configurar Schema do Banco
+        env:
+          MYSQL_PWD: admin
         run: |
-          sleep 10 
-          mysql -h 127.0.0.1 -u admin -p admin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -p admin db_escola < db_escola.sql
+          sleep 10
+          mysql -h 127.0.0.1 -u admin -padmin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -padmin db_escola < db_escola.sql
 
       - name: Testa o projeto e gera relatórios (com Xvfb)
         # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
@@ -109,11 +113,13 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_admin_PASSWORD: admin
+          MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: db_escola
+          MYSQL_USER: admin
+          MYSQL_PASSWORD: admin
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: --health-cmd="mysqladmin ping -u admin -padmin" --health-interval=10s --health-timeout=5s --health-retries=10
     
     steps:
       - name: Realiza o checkout
@@ -143,9 +149,11 @@ jobs:
         run: sudo apt-get install -y default-mysql-client
 
       - name: Configurar Schema do Banco
+        env:
+          MYSQL_PWD: admin
         run: |
-          sleep 10 
-          mysql -h 127.0.0.1 -u admin -p admin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -p admin db_escola < db_escola.sql
+          sleep 10
+          mysql -h 127.0.0.1 -u admin -padmin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -padmin db_escola < db_escola.sql
       
       - name: Executa testes e gera relatórios
         # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
