@@ -1,17 +1,54 @@
 package view;
 
+import DAO.AlunoDAO;
 import model.Aluno;
 import javax.swing.JOptionPane;
+import javax.swing.JComboBox;
+import javax.swing.JTextField;
 
+/**
+ * A View (JFrame) refatorada.
+ * Esta classe é "burra". Ela não contém lógica de negócios.
+ * Ela apenas delega todas as ações para o EditarAlunoController.
+ */
 public class EditarAluno extends javax.swing.JFrame {
 
-    private Aluno objetoAluno;
+    // A View agora TEM um Controller para fazer o trabalho
+    private EditarAlunoController controller;
 
+    /**
+     * Este é o NOVO construtor principal.
+     * Ele recebe o ID do aluno vindo da tela GerenciaAlunos.
+     */
+    public EditarAluno(int idAluno) {
+        initComponents();
+        getRootPane().setDefaultButton(this.bConfirmar);
+
+        // O Controller é instanciado, passando a si mesmo (a View)
+        // e o DAO para ele.
+        AlunoDAO alunoDAO = new AlunoDAO(); // Injeção de dependência real
+        this.controller = new EditarAlunoController(this, alunoDAO, idAluno);
+
+        // Pede ao controller para carregar os dados
+        controller.carregarDadosIniciais();
+    }
+
+    /**
+     * Construtor antigo, mantido para o NetBeans GUI Builder poder abrir o
+     * formulário no modo de design. Não deve ser chamado pela aplicação.
+     */
     public EditarAluno() {
         initComponents();
-        preencheCampos();
         getRootPane().setDefaultButton(this.bConfirmar);
-        this.objetoAluno = new Aluno();
+
+        // Se abrir sem um ID, desabilita os campos para evitar erros
+        if (this.controller == null) {
+            nome.setEnabled(false);
+            idade.setEnabled(false);
+            curso.setEnabled(false);
+            fase.setEnabled(false);
+            bConfirmar.setEnabled(false);
+        }
     }
 
     /**
@@ -133,96 +170,11 @@ public class EditarAluno extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void preencheCampos() {
-        String[] arrayCursos = {"-",
-            "Administração",
-            "Análise e Desenvolvimento de Sistemas",
-            "Arquitetura e Urbanismo",
-            "Ciências Contábeis",
-            "Ciências da Computação",
-            "Design",
-            "Design de Moda",
-            "Relações Internacionais",
-            "Sistemas de Informação"};
-        int[] arrayFases = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-        int indexCursos = 0;
-        int indexFases = 0;
-
-        for (int i = 0; i < 10; i++) {
-            if (GerenciaAlunos.listaDados2[3].equalsIgnoreCase(arrayCursos[i])) {
-                indexCursos = i;
-            }
-        }
-
-        for (int i = 0; i < 10; i++) {
-            if (Integer.parseInt(GerenciaAlunos.listaDados2[4]) == arrayFases[i]) {
-                indexFases = i;
-            }
-        }
-
-        this.nome.setText(GerenciaAlunos.listaDados2[1]);
-        this.idade.setText(GerenciaAlunos.listaDados2[2]);
-        this.curso.setSelectedIndex(indexCursos);
-        this.fase.setSelectedIndex(indexFases);
-    }
-
+    // MÉTODO REFATORADO
     private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
-        try {
-            String nome = "";
-            int idade = 0;
-            String curso = "";
-            int fase = 0;
-            int id = Integer.parseInt(GerenciaAlunos.listaDados2[0]);
-            String[] arrayCursos = {"-",
-                "Administração",
-                "Análise e Desenvolvimento de Sistemas",
-                "Arquitetura e Urbanismo",
-                "Ciências Contábeis",
-                "Ciências da Computação",
-                "Design",
-                "Design de Moda",
-                "Relações Internacionais",
-                "Sistemas de Informação"};
-            int[] arrayFases = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-            // Setando nome
-            if (this.nome.getText().length() < 2) {
-                throw new Mensagens("Nome deve conter ao menos 2 caracteres.");
-            } else {
-                nome = this.nome.getText();
-            }
-
-            // Setando idade
-            if (Integer.parseInt(this.idade.getText()) < 11) {
-                throw new Mensagens("Idade inválida");
-            } else {
-                idade = Integer.parseInt(this.idade.getText());
-            }
-
-            // Setando curso
-            if (this.curso.getSelectedIndex() == 0) {
-                throw new Mensagens("Escolha um curso");
-            } else {
-                curso = arrayCursos[this.curso.getSelectedIndex()];
-            }
-
-            // Setando fase
-            fase = arrayFases[this.fase.getSelectedIndex()];
-
-            // Adicionando dados validados no database
-            if (this.objetoAluno.UpdateAlunoBD(curso, fase, id, nome, idade)) {
-                JOptionPane.showMessageDialog(rootPane, "Aluno alterado com sucesso!");
-
-                this.dispose();
-            }
-
-            // Capturando exceções
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(null, erro.getMessage());
-        } catch (NumberFormatException erro2) {
-            JOptionPane.showMessageDialog(null, "Informe um número.");
-        }
+        // A View agora APENAS delega para o Controller.
+        controller.salvarAlteracoes();
     }//GEN-LAST:event_bConfirmarActionPerformed
 
     private void bCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bCancelarActionPerformed
@@ -236,7 +188,7 @@ public class EditarAluno extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -278,4 +230,69 @@ public class EditarAluno extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JTextField nome;
     // End of variables declaration//GEN-END:variables
+
+
+    // --- MÉTODOS DE ACESSO PARA O CONTROLLER ---
+
+    public String getNome() {
+        return this.nome.getText();
+    }
+
+    public String getIdade() {
+        return this.idade.getText();
+    }
+
+    public int getCursoIndex() {
+        return this.curso.getSelectedIndex();
+    }
+
+    public String getCursoValor() {
+        return this.curso.getSelectedItem().toString();
+    }
+
+    public int getFaseIndex() {
+        return this.fase.getSelectedIndex();
+    }
+
+    public int getFaseValor() {
+        return this.fase.getSelectedIndex() + 1;
+    }
+
+    public void setNome(String nome) {
+        this.nome.setText(nome);
+    }
+
+    public void setIdade(String idade) {
+        this.idade.setText(idade);
+    }
+
+    public void exibirMensagemErro(String msg) {
+        JOptionPane.showMessageDialog(null, msg);
+    }
+
+    public void exibirMensagemSucesso(String msg) {
+        JOptionPane.showMessageDialog(rootPane, msg);
+    }
+
+    public void fecharJanela() {
+        this.dispose();
+    }
+
+    // --- MÉTODOS DE ACESSO CORRIGIDOS (para o Teste) ---
+
+    public int getCursoItemCount() {
+        return this.curso.getItemCount();
+    }
+
+    public String getCursoItemAt(int index) {
+        return this.curso.getItemAt(index);
+    }
+
+    public void setCursoIndex(int index) {
+        this.curso.setSelectedIndex(index);
+    }
+
+    public void setFaseIndex(int index) {
+        this.fase.setSelectedIndex(index);
+    }
 }

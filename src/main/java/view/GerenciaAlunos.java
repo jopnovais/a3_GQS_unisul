@@ -210,13 +210,23 @@ public class GerenciaAlunos extends javax.swing.JFrame {
     }//GEN-LAST:event_bCadastroActionPerformed
 
     private void bEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bEditarActionPerformed
-        if (this.jTableAlunos.getSelectedRow() != -1) {
-            EditarAluno tela = new EditarAluno();
-            tela.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(null, "Selecione um cadastro para alterar");
-        }
+        try {
+            if (this.jTableAlunos.getSelectedRow() != -1) {
+                // Pega o ID da tabela
+                int idAluno = Integer.parseInt(
+                        this.jTableAlunos.getValueAt(this.jTableAlunos.getSelectedRow(), 0).toString()
+                );
 
+                // Passa o ID para o construtor da tela de edição
+                EditarAluno tela = new EditarAluno(idAluno);
+                tela.setVisible(true);
+
+            } else {
+                JOptionPane.showMessageDialog(null, "Selecione um cadastro para alterar");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Erro ao carregar aluno: " + e.getMessage());
+        }
     }//GEN-LAST:event_bEditarActionPerformed
 
     public static String listaDados2[] = new String[5];
