@@ -40,7 +40,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: password
+          MYSQL_admin_PASSWORD: admin
           MYSQL_DATABASE: db_escola
         ports:
           - 3306:3306
@@ -67,11 +67,11 @@ jobs:
       - name: Configurar Schema do Banco
         run: |
           sleep 10 
-          mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql || mysql -h 127.0.0.1 -u root -ppassword db_escola < db_escola.sql
+          mysql -h 127.0.0.1 -u admin -p admin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -p admin db_escola < db_escola.sql
 
       - name: Testa o projeto e gera relatórios (com Xvfb)
         # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
-        # usando TelaLogin.userDB e TelaLogin.passwordDB (root/password)
+        # usando TelaLogin.userDB e TelaLogin.passwordDB (admin/admin)
         run: xvfb-run --auto-servernum mvn -B clean test surefire-report:report jacoco:report --file pom.xml
 
       - name: Publicar Relatório de Testes (Surefire)
@@ -109,7 +109,7 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: password
+          MYSQL_admin_PASSWORD: admin
           MYSQL_DATABASE: db_escola
         ports:
           - 3306:3306
@@ -145,11 +145,11 @@ jobs:
       - name: Configurar Schema do Banco
         run: |
           sleep 10 
-          mysql -h 127.0.0.1 -u root -ppassword db_escola < schema.sql || mysql -h 127.0.0.1 -u root -ppassword db_escola < db_escola.sql
+          mysql -h 127.0.0.1 -u admin -p admin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -p admin db_escola < db_escola.sql
       
       - name: Executa testes e gera relatórios
         # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
-        # usando TelaLogin.userDB e TelaLogin.passwordDB (root/password)
+        # usando TelaLogin.userDB e TelaLogin.passwordDB (admin/admin)
         run: mvn -B clean test surefire-report:report jacoco:report --file pom.xml
       
       - name: Analisa com SonarCloud

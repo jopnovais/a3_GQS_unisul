@@ -50,7 +50,7 @@ cd a3_GQS_unisul
    - Execute o script SQL fornecido no arquivo `db_escola.sql`:
    
    ```bash
-   mysql -u root -p < db_escola.sql
+   mysql -u admin -p < db_escola.sql
    ```
    
    Ou manualmente no MySQL:
@@ -67,14 +67,14 @@ cd a3_GQS_unisul
 2. Localize as linhas onde as credenciais são configuradas (aproximadamente linha 20-21):
 
    ```java
-   TelaLogin.userDB = "root";
-   TelaLogin.passwordDB = "password";
+   TelaLogin.userDB = "admin  ";
+   TelaLogin.passwordDB = "admin";
    ```
 
 3. **Substitua pelos seus dados do MySQL**:
    ```java
-   TelaLogin.userDB = "seu_usuario_mysql";        // Exemplo: "root"
-   TelaLogin.passwordDB = "sua_senha_mysql";      // Exemplo: "MinhaSenha123"
+   TelaLogin.userDB = "seu_usuario_mysql";        // Exemplo: "admin "
+   TelaLogin.passwordDB = "sua_senha_mysql";      // Exemplo: "admin"
    ```
 
 ### Passo 4: Baixe as Dependências do Maven
