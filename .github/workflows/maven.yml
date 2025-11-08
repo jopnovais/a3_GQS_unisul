@@ -78,7 +78,7 @@ jobs:
         # usando TelaLogin.userDB e TelaLogin.passwordDB (admin/admin)
         run: xvfb-run --auto-servernum mvn -B clean test surefire-report:report jacoco:report --file pom.xml
 
-      - name: Preparar relatórios HTML com estilos
+      - name: Preparar relatórios HTML com estilos para consolidação
         if: always()
         run: |
           mkdir -p reports-html/surefire reports-html/jacoco
@@ -102,22 +102,13 @@ jobs:
             fi
           fi
 
-      - name: Publicar Relatório de Testes HTML (Surefire)
+      - name: Publicar relatórios para consolidação
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: relatorio-testes-java-${{ matrix.java-version }}
-          path: reports-html/surefire/
-          retention-days: 30
-          if-no-files-found: ignore
-
-      - name: Publicar Relatório de Cobertura HTML (JaCoCo)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: relatorio-cobertura-java-${{ matrix.java-version }}
-          path: reports-html/jacoco/
-          retention-days: 30
+          name: relatorios-java-${{ matrix.java-version }}
+          path: reports-html/
+          retention-days: 7
           if-no-files-found: ignore
 
       - name: Publicar Relatório XML de Cobertura (para SonarCloud)
@@ -132,21 +123,8 @@ jobs:
   # 3. Job de Análise de Qualidade de Código (SonarCloud)
   analise-qualidade-codigo:
     runs-on: ubuntu-latest
-    needs: testes-compatibilidade-java
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    # Serviço de Banco de Dados
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: admin
-          MYSQL_DATABASE: db_escola
-          MYSQL_USER: admin
-          MYSQL_PASSWORD: admin
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping -u admin -padmin" --health-interval=10s --health-timeout=5s --health-retries=10
+    needs: consolidar-relatorios-testes
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testedevalidacaoesistema')
     
     steps:
       - name: Realiza o checkout
@@ -172,20 +150,31 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
       
-      - name: Instalar cliente MySQL
-        run: sudo apt-get install -y default-mysql-client
-
-      - name: Configurar Schema do Banco
-        env:
-          MYSQL_PWD: admin
-        run: |
-          sleep 10
-          mysql -h 127.0.0.1 -u admin -padmin db_escola < schema.sql || mysql -h 127.0.0.1 -u admin -padmin db_escola < db_escola.sql
+      - name: Baixar relatório XML de cobertura do Java 8
+        uses: actions/download-artifact@v4
+        with:
+          pattern: jacoco-xml-java-8
+          path: jacoco-xml
       
-      - name: Executa testes e gera relatórios
-        # Nota: As credenciais do banco são configuradas nos testes via @BeforeAll
-        # usando TelaLogin.userDB e TelaLogin.passwordDB (admin/admin)
-        run: mvn -B clean test surefire-report:report jacoco:report --file pom.xml
+      - name: Preparar relatório XML de cobertura para SonarCloud
+        if: always()
+        run: |
+          # Procurar o arquivo jacoco.xml nos artefatos baixados
+          mkdir -p target/site/jacoco
+          if [ -f jacoco-xml/jacoco-xml-java-8/jacoco.xml ]; then
+            cp jacoco-xml/jacoco-xml-java-8/jacoco.xml target/site/jacoco/jacoco.xml
+            echo "✅ Arquivo jacoco.xml encontrado e copiado"
+          elif [ -f jacoco-xml/jacoco.xml ]; then
+            cp jacoco-xml/jacoco.xml target/site/jacoco/jacoco.xml
+            echo "✅ Arquivo jacoco.xml encontrado e copiado"
+          else
+            echo "⚠️ Aviso: Arquivo jacoco.xml não encontrado, SonarCloud pode não ter dados de cobertura"
+            # Criar arquivo vazio para evitar erro
+            touch target/site/jacoco/jacoco.xml
+          fi
+      
+      - name: Compilar projeto para análise SonarCloud
+        run: mvn -B clean compile --file pom.xml
       
       - name: Analisa com SonarCloud
         env:
@@ -199,60 +188,160 @@ jobs:
     needs: testes-compatibilidade-java
     if: always()
     steps:
-      - name: Baixar todos os relatórios de testes HTML
+      - name: Baixar todos os relatórios HTML de todas as versões Java
         uses: actions/download-artifact@v4
         with:
-          pattern: relatorio-testes-*
+          pattern: relatorios-java-*
           merge-multiple: false
-          path: reports-consolidados/testes
-      
-      - name: Baixar todos os relatórios de cobertura HTML
-        uses: actions/download-artifact@v4
-        with:
-          pattern: relatorio-cobertura-*
-          merge-multiple: false
-          path: reports-consolidados/cobertura
+          path: reports-consolidados
       
       - name: Organizar relatórios HTML consolidados
         if: always()
         run: |
           mkdir -p reports-consolidados/html/surefire reports-consolidados/html/jacoco
-          # Copiar relatórios mantendo estrutura de diretórios para recursos CSS/JS
-          if [ -d reports-consolidados/testes ]; then
-            find reports-consolidados/testes -type f -name "*.html" -exec cp {} reports-consolidados/html/surefire/ \;
-            find reports-consolidados/testes -type d -name "css" -exec cp -r {} reports-consolidados/html/surefire/ \;
-            find reports-consolidados/testes -type d -name "images" -exec cp -r {} reports-consolidados/html/surefire/ \;
-          fi
-          if [ -d reports-consolidados/cobertura ]; then
-            cp -r reports-consolidados/cobertura/* reports-consolidados/html/jacoco/ 2>/dev/null || true
-          fi
-          # Criar índice HTML simples para navegação
+          
+          # Processar relatórios de todas as versões Java
+          for java_dir in reports-consolidados/relatorios-java-*/; do
+            if [ -d "$java_dir" ]; then
+              java_version=$(basename "$java_dir" | sed 's/relatorios-java-//')
+              
+              # Copiar relatórios Surefire (usar o do Java 8 como principal)
+              if [ "$java_version" = "8" ] && [ -f "$java_dir/surefire/surefire-report.html" ]; then
+                cp "$java_dir/surefire/surefire-report.html" reports-consolidados/html/surefire/
+                if [ -d "$java_dir/surefire/css" ]; then
+                  cp -r "$java_dir/surefire/css" reports-consolidados/html/surefire/
+                fi
+                if [ -d "$java_dir/surefire/images" ]; then
+                  cp -r "$java_dir/surefire/images" reports-consolidados/html/surefire/
+                fi
+              fi
+              
+              # Copiar relatórios JaCoCo (usar o do Java 8 como principal)
+              if [ "$java_version" = "8" ] && [ -d "$java_dir/jacoco" ]; then
+                cp -r "$java_dir/jacoco"/* reports-consolidados/html/jacoco/ 2>/dev/null || true
+              fi
+            fi
+          done
+          
+          # Criar índice HTML estilizado para navegação
           cat > reports-consolidados/html/index.html << 'EOF'
           <!DOCTYPE html>
-          <html>
+          <html lang="pt-BR">
           <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Relatórios de Testes - SisUni</title>
             <style>
-              body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-              h1 { color: #333; }
-              .report-link { display: block; padding: 10px; margin: 5px 0; background: white; 
-                            border-left: 4px solid #4CAF50; text-decoration: none; color: #333; }
-              .report-link:hover { background: #f0f0f0; }
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { 
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                padding: 40px 20px;
+              }
+              .container {
+                max-width: 800px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                overflow: hidden;
+              }
+              .header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+              }
+              .header h1 {
+                font-size: 28px;
+                margin-bottom: 10px;
+              }
+              .header p {
+                opacity: 0.9;
+                font-size: 14px;
+              }
+              .content {
+                padding: 30px;
+              }
+              .report-link {
+                display: flex;
+                align-items: center;
+                padding: 20px;
+                margin: 15px 0;
+                background: #f8f9fa;
+                border-left: 5px solid #4CAF50;
+                text-decoration: none;
+                color: #333;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              .report-link:hover {
+                background: #e9ecef;
+                transform: translateX(5px);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+              }
+              .report-link .icon {
+                font-size: 32px;
+                margin-right: 15px;
+              }
+              .report-link .text {
+                flex: 1;
+              }
+              .report-link .title {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 5px;
+              }
+              .report-link .description {
+                font-size: 14px;
+                color: #666;
+              }
+              .footer {
+                text-align: center;
+                padding: 20px;
+                color: #666;
+                font-size: 12px;
+                border-top: 1px solid #e9ecef;
+              }
             </style>
           </head>
           <body>
-            <h1>Relatórios de Testes - SisUni</h1>
-            <a href="surefire/surefire-report.html" class="report-link">📊 Relatório de Testes (Surefire)</a>
-            <a href="jacoco/index.html" class="report-link">📈 Relatório de Cobertura (JaCoCo)</a>
+            <div class="container">
+              <div class="header">
+                <h1>📊 Relatórios de Testes</h1>
+                <p>Sistema de Gerenciamento Universitário - SisUni</p>
+              </div>
+              <div class="content">
+                <a href="surefire/surefire-report.html" class="report-link">
+                  <span class="icon">📋</span>
+                  <div class="text">
+                    <div class="title">Relatório de Testes (Surefire)</div>
+                    <div class="description">Visualize todos os testes executados, resultados e estatísticas</div>
+                  </div>
+                </a>
+                <a href="jacoco/index.html" class="report-link">
+                  <span class="icon">📈</span>
+                  <div class="text">
+                    <div class="title">Relatório de Cobertura (JaCoCo)</div>
+                    <div class="description">Análise detalhada da cobertura de código por pacote, classe e método</div>
+                  </div>
+                </a>
+              </div>
+              <div class="footer">
+                Gerado automaticamente pelo GitHub Actions
+              </div>
+            </div>
           </body>
           </html>
           EOF
       
-      - name: Publicar Relatórios HTML Consolidados
+      - name: Publicar Relatório HTML Consolidado
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: relatorios-consolidados-html
+          name: relatorio-consolidado-html
           path: reports-consolidados/html/
           retention-days: 90
           if-no-files-found: ignore
@@ -263,7 +352,7 @@ jobs:
     environment:
       name: prd
     needs: analise-qualidade-codigo
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/testedevalidacaoesistema')
     steps:
       - name: Realiza o checkout
         uses: actions/checkout@v4
