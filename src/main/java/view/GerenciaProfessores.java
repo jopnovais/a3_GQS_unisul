@@ -66,18 +66,18 @@ public class GerenciaProfessores extends javax.swing.JFrame {
         });
 
         jTableProfessores.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{
-                    {null, null, null, null, null, null, null, null},
-                    {null, null, null, null, null, null, null, null},
-                    {null, null, null, null, null, null, null, null},
-                    {null, null, null, null, null, null, null, null}
+                new Object [][] {
+                        {null, null, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, null, null},
+                        {null, null, null, null, null, null, null, null}
                 },
-                new String[]{
-                    "ID", "Nome", "Idade", "Campus", "CPF", "Contato", "Título", "Salário"
+                new String [] {
+                        "ID", "Nome", "Idade", "Campus", "CPF", "Contato", "Título", "Salário"
                 }
         ) {
-            boolean[] canEdit = new boolean[]{
-                false, false, false, false, false, false, false, false
+            boolean[] canEdit = new boolean [] {
+                    false, false, false, false, false, false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -85,11 +85,7 @@ public class GerenciaProfessores extends javax.swing.JFrame {
             }
         });
         jTableProfessores.setSelectionForeground(new java.awt.Color(239, 239, 239));
-        jTableProfessores.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jTableProfessoresMouseClicked(evt);
-            }
-        });
+        // O jTableProfessoresMouseClicked foi removido, pois o array estático não existe mais
         jScrollPane2.setViewportView(jTableProfessores);
         if (jTableProfessores.getColumnModel().getColumnCount() > 0) {
             jTableProfessores.getColumnModel().getColumn(0).setMinWidth(40);
@@ -214,56 +210,39 @@ public class GerenciaProfessores extends javax.swing.JFrame {
 
     }//GEN-LAST:event_bCadastroActionPerformed
 
+    // --- MÉTODO REFATORADO ---
+    // Agora passa o ID para o construtor de EditarProfessor
     private void bEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bEditarActionPerformed
         try {
             if (this.jTableProfessores.getSelectedRow() != -1) {
-                EditarProfessor tela = new EditarProfessor();
+
+                // Pega o ID da tabela
+                int idProfessor = Integer.parseInt(
+                        this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 0).toString()
+                );
+
+                // Passa o ID para o construtor
+                EditarProfessor tela = new EditarProfessor(idProfessor);
                 tela.setVisible(true);
+
             } else {
                 JOptionPane.showMessageDialog(null, "Selecione um cadastro para alterar");
             }
         } catch (ParseException ex) {
             Logger.getLogger(GerenciaProfessores.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Erro ao carregar professor: " + e.getMessage());
         }
 
     }//GEN-LAST:event_bEditarActionPerformed
 
-    public static String listaDados[] = new String[8];
+    // O array estático foi removido
+    // public static String listaDados[] = new String[8];
 
-    private String validarFormatado(String input) {
-        String str = "";
+    // O método validarFormatado foi removido daqui
 
-        for (int i = 0; i < input.length(); i++) {
-            if (("0123456789").contains(input.charAt(i) + "")) {
-                str += input.charAt(i) + "";
-            }
-        }
-
-        return str;
-    }
-
-    private void jTableProfessoresMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableProfessoresMouseClicked
-        if (this.jTableProfessores.getSelectedRow() != -1) {
-
-            String nome = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 1).toString();
-            String idade = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 2).toString();
-            String campus = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 3).toString();
-            String cpf = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 4).toString();
-            String contato = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 5).toString();
-            String titulo = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 6).toString();
-            String salario = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 7).toString();
-            String id = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 0).toString();
-
-            listaDados[0] = nome;
-            listaDados[1] = idade;
-            listaDados[2] = campus;
-            listaDados[3] = cpf;
-            listaDados[4] = contato;
-            listaDados[5] = titulo;
-            listaDados[6] = validarFormatado(salario);
-            listaDados[7] = id;
-        }
-    }//GEN-LAST:event_jTableProfessoresMouseClicked
+    // O jTableProfessoresMouseClicked foi removido
+    // (não precisamos mais popular o array estático)
 
     private void bDeletarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDeletarActionPerformed
         try {
@@ -288,7 +267,7 @@ public class GerenciaProfessores extends javax.swing.JFrame {
                 }
             }
         } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(rootPane, erro.getMessage());
+            JOptionPane.showMessageDialog(null, erro.getMessage());
         } finally {
             // atualiza a tabela.
             carregaTabela();
@@ -318,14 +297,14 @@ public class GerenciaProfessores extends javax.swing.JFrame {
 
         for (Professor a : minhalista) {
             modelo.addRow(new Object[]{
-                a.getId(),
-                a.getNome(),
-                a.getIdade(),
-                a.getCampus(),
-                a.getCpf(),
-                a.getContato(),
-                a.getTitulo(),
-                "R$" + a.getSalario() + ".00"
+                    a.getId(),
+                    a.getNome(),
+                    a.getIdade(),
+                    a.getCampus(),
+                    a.getCpf(),
+                    a.getContato(),
+                    a.getTitulo(),
+                    "R$" + a.getSalario() + ".00"
             });
         }
     }
@@ -337,7 +316,7 @@ public class GerenciaProfessores extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
