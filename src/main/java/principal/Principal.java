@@ -19,8 +19,8 @@ public class Principal {
 
         // Configurar credenciais do MySQL diretamente
         // Altere aqui com suas credenciais do MySQL
-        TelaLogin.userDB = "root";
-        TelaLogin.passwordDB = "exemplo123";
+        TelaLogin.userDB = "admin";
+        TelaLogin.passwordDB = "admin";
 
         // Verificar conexão com o banco de dados
         AlunoDAO teste = new AlunoDAO();
