@@ -27,8 +27,7 @@ public class AlunoRepositoryImpl implements AlunoRepository {
             stmt.execute();
             return true;
         } catch (SQLException e) {
-            System.err.println("Erro ao salvar aluno: " + e.getMessage());
-            throw new RuntimeException("Erro ao salvar aluno", e);
+            throw new RuntimeException("Erro ao salvar aluno: " + e.getMessage(), e);
         }
     }
     
@@ -48,8 +47,7 @@ public class AlunoRepositoryImpl implements AlunoRepository {
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.err.println("Erro ao atualizar aluno: " + e.getMessage());
-            throw new RuntimeException("Erro ao atualizar aluno", e);
+            throw new RuntimeException("Erro ao atualizar aluno: " + e.getMessage(), e);
         }
     }
     
@@ -64,8 +62,7 @@ public class AlunoRepositoryImpl implements AlunoRepository {
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.err.println("Erro ao deletar aluno: " + e.getMessage());
-            return false;
+            throw new RuntimeException("Erro ao deletar aluno: " + e.getMessage(), e);
         }
     }
     
@@ -80,20 +77,24 @@ public class AlunoRepositoryImpl implements AlunoRepository {
             
             try (ResultSet res = stmt.executeQuery()) {
                 if (res.next()) {
-                    Aluno aluno = new Aluno();
-                    aluno.setId(res.getInt("id"));
-                    aluno.setNome(res.getString("nome"));
-                    aluno.setIdade(res.getInt("idade"));
-                    aluno.setCurso(res.getString("curso"));
-                    aluno.setFase(res.getInt("fase"));
-                    return aluno;
+                    return criarAlunoDoResultSet(res);
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar aluno: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar aluno por ID: " + e.getMessage(), e);
         }
         
         return null;
+    }
+    
+    private Aluno criarAlunoDoResultSet(ResultSet res) throws SQLException {
+        Aluno aluno = new Aluno();
+        aluno.setId(res.getInt("id"));
+        aluno.setNome(res.getString("nome"));
+        aluno.setIdade(res.getInt("idade"));
+        aluno.setCurso(res.getString("curso"));
+        aluno.setFase(res.getInt("fase"));
+        return aluno;
     }
     
     @Override
@@ -106,16 +107,10 @@ public class AlunoRepositoryImpl implements AlunoRepository {
              ResultSet res = stmt.executeQuery(sql)) {
             
             while (res.next()) {
-                Aluno aluno = new Aluno();
-                aluno.setId(res.getInt("id"));
-                aluno.setNome(res.getString("nome"));
-                aluno.setIdade(res.getInt("idade"));
-                aluno.setCurso(res.getString("curso"));
-                aluno.setFase(res.getInt("fase"));
-                alunos.add(aluno);
+                alunos.add(criarAlunoDoResultSet(res));
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar alunos: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar todos os alunos: " + e.getMessage(), e);
         }
         
         return alunos;
@@ -133,7 +128,7 @@ public class AlunoRepositoryImpl implements AlunoRepository {
                 return res.getInt("max_id");
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar maior ID: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar maior ID: " + e.getMessage(), e);
         }
         
         return 0;
