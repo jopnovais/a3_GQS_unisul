@@ -268,7 +268,6 @@ public class GerenciaAlunos extends javax.swing.JFrame {
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(rootPane, "Erro ao obter ID do aluno selecionado.", "Erro", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            ex.printStackTrace();
             JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bDeletarActionPerformed
@@ -303,7 +302,6 @@ public class GerenciaAlunos extends javax.swing.JFrame {
                     a.getFase() + "ª",});
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
             JOptionPane.showMessageDialog(rootPane, "Erro ao carregar lista de alunos.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }

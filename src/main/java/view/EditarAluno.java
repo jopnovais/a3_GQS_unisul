@@ -229,7 +229,6 @@ public class EditarAluno extends javax.swing.JFrame {
         } catch (ValidacaoException ex) {
             JOptionPane.showMessageDialog(rootPane, ex.getMessage(), "Erro de Validação", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            ex.printStackTrace();
             JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bConfirmarActionPerformed
