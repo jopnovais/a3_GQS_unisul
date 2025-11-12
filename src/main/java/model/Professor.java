@@ -3,7 +3,8 @@ package model;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import DAO.ProfessorDAO;
+import repository.ProfessorRepository;
+import repository.ProfessorRepositoryImpl;
 
 public class Professor extends Pessoa {
 
@@ -13,11 +14,11 @@ public class Professor extends Pessoa {
     private String contato;
     private String titulo;
     private double salario;
-    private final ProfessorDAO dao;
+    private final ProfessorRepository repository;
 
     // Construtores
     public Professor() {
-        this.dao = new ProfessorDAO();
+        this.repository = new ProfessorRepositoryImpl();
     }
 
     public Professor(String campus, String cpf, String contato, String titulo, double salario) {
@@ -26,7 +27,7 @@ public class Professor extends Pessoa {
         this.contato = contato;
         this.titulo = titulo;
         this.salario = salario;
-        this.dao = new ProfessorDAO();
+        this.repository = new ProfessorRepositoryImpl();
     }
 
     public Professor(String campus, String cpf, String contato, String titulo, double salario, int id, String nome, int idade) {
@@ -36,7 +37,7 @@ public class Professor extends Pessoa {
         this.contato = contato;
         this.titulo = titulo;
         this.salario = salario;
-        this.dao = new ProfessorDAO();
+        this.repository = new ProfessorRepositoryImpl();
     }
 
     // Métodos GET e SET
@@ -100,39 +101,28 @@ public class Professor extends Pessoa {
      */
     // Retorna a Lista de Professores (objetos)
     public ArrayList getMinhaLista() {
-        //return AlunoDAO.MinhaLista;
-        return dao.getMinhaLista();
+        return new ArrayList(repository.findAll());
     }
 
-    // Cadastra novo professor
     public boolean InsertProfessorBD(String campus, String cpf, String contato, String titulo, double salario, String nome, int idade) throws SQLException {
-        int id = this.maiorID() + 1;
-        Professor objeto = new Professor(campus, cpf, contato, titulo, salario, id, nome, idade);
-        dao.InsertProfessorBD(objeto);
-        return true;
+        Professor objeto = new Professor(campus, cpf, contato, titulo, salario, 0, nome, idade);
+        return repository.save(objeto);
     }
 
-    // Deleta um professor específico pelo seu campo ID
     public boolean DeleteProfessorBD(int id) {
-        dao.DeleteProfessorBD(id);
-        return true;
+        return repository.delete(id);
     }
 
-    // Edita um professor específico pelo seu campo ID
     public boolean UpdateProfessorBD(String campus, String cpf, String contato, String titulo, double salario, int id, String nome, int idade) {
         Professor objeto = new Professor(campus, cpf, contato, titulo, salario, id, nome, idade);
-        dao.UpdateProfessorBD(objeto);
-        return true;
+        return repository.update(objeto);
     }
 
-    // carrega dados de um professor específico pelo seu ID
     public Professor carregaProfessor(int id) {
-        dao.carregaProfessor(id);
-        return null;
+        return repository.findById(id);
     }
 
-    // retorna o maior ID da nossa base de dados
     public int maiorID() throws SQLException {
-        return dao.maiorID();
+        return repository.getMaxId();
     }
 }
