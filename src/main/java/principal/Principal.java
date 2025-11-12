@@ -1,54 +1,48 @@
 package principal;
 
-import view.TelaLogin;
 import view.TelaPrincipal;
 import com.formdev.flatlaf.FlatDarkLaf;
-import DAO.AlunoDAO;
+import db.ConnectionFactory;
 import java.sql.Connection;
 import javax.swing.JOptionPane;
 
 public class Principal {
 
     public static void main(String[] args) {
-        // Configurar tema padrão (claro)
         try {
             FlatDarkLaf.setup();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Configurar credenciais do MySQL diretamente
-        // Altere aqui com suas credenciais do MySQL
-        TelaLogin.userDB = "root";
-        TelaLogin.passwordDB = "exemplo123";
-
-        // Verificar conexão com o banco de dados
-        AlunoDAO teste = new AlunoDAO();
-        Connection conexao = teste.getConexao();
-
-        if (conexao != null) {
-            try {
-                conexao.close(); // Fechar conexão de teste
-            } catch (Exception e) {
-                // Ignorar erro ao fechar conexão de teste
-            }
-
-            // Conexão bem-sucedida, abrir tela principal
-            java.awt.EventQueue.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    new TelaPrincipal().setVisible(true);
+        try {
+            Connection conexao = ConnectionFactory.getConnection();
+            
+            if (conexao != null) {
+                try {
+                    conexao.close();
+                } catch (Exception e) {
+                    // Ignorar
                 }
-            });
-        } else {
-            // Erro na conexão
+
+                java.awt.EventQueue.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        new TelaPrincipal().setVisible(true);
+                    }
+                });
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Erro ao conectar com o banco de dados SQLite!\n\n"
+                        + "Verifique se há permissões para criar o arquivo 'projeto_faculdade.db'",
+                        "Erro de Conexão",
+                        JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(null,
-                    "Erro ao conectar com o banco de dados MySQL!\n\n"
-                    + "Verifique se:\n"
-                    + "- O MySQL está rodando\n"
-                    + "- O banco 'db_escola' foi criado\n"
-                    + "- As credenciais estão corretas no arquivo Principal.java\n"
-                    + "- A porta 3306 está acessível",
+                    "Erro ao conectar com o banco de dados SQLite!\n\n"
+                    + "Detalhes: " + e.getMessage(),
                     "Erro de Conexão",
                     JOptionPane.ERROR_MESSAGE);
             System.exit(1);
