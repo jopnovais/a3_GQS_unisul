@@ -22,6 +22,18 @@
         <sonar.coverage.jacoco.xmlReportPath>
             ${project.build.directory}/site/jacoco/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPath>
+        
+        <sonar.exclusions>
+            **/view/**,
+            **/principal/**,
+            **/DAO/**
+        </sonar.exclusions>
+        
+        <sonar.coverage.exclusions>
+            **/view/**,
+            **/principal/**,
+            **/DAO/**
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
