@@ -1,25 +1,28 @@
 package view;
 
-import com.formdev.flatlaf.json.ParseException;
-import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import model.Professor;
+import repository.ProfessorRepository;
+import repository.ProfessorRepositoryImpl;
+import service.ProfessorService;
+import service.ProfessorServiceImpl;
+import service.exception.ValidacaoException;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.text.MaskFormatter;
-import model.Professor;
-import java.util.ArrayList;
 
 public class CadastroProfessor extends javax.swing.JFrame {
 
-    private Professor objetoProfessor;
+    private final ProfessorService professorService;
 
     public CadastroProfessor() throws java.text.ParseException {
+        ProfessorRepository professorRepository = new ProfessorRepositoryImpl();
+        this.professorService = new ProfessorServiceImpl(professorRepository);
+        
         initComponents();
         formatarCampos();
         getRootPane().setDefaultButton(this.bConfirmar);
-        this.objetoProfessor = new Professor();
     }
 
     /**
@@ -195,62 +198,14 @@ public class CadastroProfessor extends javax.swing.JFrame {
             mask2.install(contatoFormatado);
             MaskFormatter mask3 = new MaskFormatter("R$#####");
             mask3.install(salarioFormatado);
-        } catch (ParseException ex) {
+        } catch (java.text.ParseException ex) {
             JOptionPane.showMessageDialog(null, "Erro ao formatar campos", "ERRO", JOptionPane.ERROR);
         }
     }
 
-    private boolean verificaCpf(String cpf) {
-        ArrayList<Professor> minhalista = new ArrayList<>();
-        minhalista = objetoProfessor.getMinhaLista();
-
-        for (Professor a : minhalista) {
-            if ((cpf.equals(a.getCpf()))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private int calculaIdade(java.util.Date dataNasc) {
-        Calendar dataNascimento = new GregorianCalendar();
-        dataNascimento.setTime(dataNasc);
-
-        Calendar today = Calendar.getInstance();
-
-        int age = today.get(Calendar.YEAR) - dataNascimento.get(Calendar.YEAR);
-
-        dataNascimento.add(Calendar.YEAR, age);
-
-        if (today.before(dataNascimento)) {
-            age--;
-        }
-
-        return age;
-    }
-
-    private String validarFormatado(String input) {
-        String str = "";
-
-        for (int i = 0; i < input.length(); i++) {
-            if (("0123456789").contains(input.charAt(i) + "")) {
-                str += input.charAt(i) + "";
-            }
-        }
-
-        return str;
-    }
 
     private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
-
         try {
-            String nome = "";
-            String campus = "";
-            String cpf = "";
-            String contato = "";
-            int idade = 0;
-            double salario = 0;
-            String titulo = "";
             String[] arrayCampus = {"-",
                 "Continente",
                 "Dib Mussi",
@@ -264,75 +219,42 @@ public class CadastroProfessor extends javax.swing.JFrame {
                 "Mestrado",
                 "Doutorado"};
 
-            // Setando nome
-            if (this.nome.getText().length() < 2) {
-                throw new Mensagens("Nome deve conter ao menos 2 caracteres.");
-            } else {
-                nome = this.nome.getText();
+            if (this.idade.getDate() == null) {
+                JOptionPane.showMessageDialog(rootPane, "Data de nascimento é obrigatória.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-            // Setando campus
-            if (this.campus.getSelectedIndex() == 0) {
-                throw new Mensagens("Escolha o campus");
-            } else {
-                campus = arrayCampus[this.campus.getSelectedIndex()];
-            }
+            int idadeCalculada = professorService.calcularIdade(this.idade.getDate());
+            String campus = arrayCampus[this.campus.getSelectedIndex()];
+            String cpf = this.cpfFormatado.getText();
+            String contato = this.contatoFormatado.getText();
+            String titulo = arrayTitulo[this.titulo.getSelectedIndex()];
+            
+            String salarioFormatado = professorService.validarFormatado(this.salarioFormatado.getText());
+            double salario = Double.parseDouble(salarioFormatado);
 
-            // Setando cpf
-            if (validarFormatado(this.cpfFormatado.getText()).length() != 11) {
-                throw new Mensagens("O campo CPF deve possuir 11 caracteres numéricos");
-            } else if (this.verificaCpf(this.cpfFormatado.getText())) {
-                throw new Mensagens("CPF já cadastrado no sistema");
-            } else {
-                cpf = this.cpfFormatado.getText();
-            }
+            Professor professor = new Professor();
+            professor.setNome(this.nome.getText());
+            professor.setIdade(idadeCalculada);
+            professor.setCampus(campus);
+            professor.setCpf(cpf);
+            professor.setContato(contato);
+            professor.setTitulo(titulo);
+            professor.setSalario(salario);
 
-            // Setando contato
-            if (validarFormatado(this.contatoFormatado.getText()).length() != 11) {
-                throw new Mensagens("O campo contato deve possuir 11 caracteres numéricos");
-            } else {
-                contato = this.contatoFormatado.getText();
-            }
+            professorService.salvar(professor);
 
-            // Setando idade
-            if (calculaIdade(this.idade.getDate()) < 11) {
-                throw new Mensagens("Idade inválida");
-            } else {
-                idade = calculaIdade(this.idade.getDate());
-            }
+            JOptionPane.showMessageDialog(rootPane, "Professor cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
 
-            // Setando salário
-            if (validarFormatado(this.salarioFormatado.getText()).length() < 4) {
-                throw new Mensagens("O campo salário deve possuir no mínimo 4 caracteres numéricos");
-            } else {
-                salario = Double.parseDouble(validarFormatado(this.salarioFormatado.getText()));
-            }
-
-            // Setando titulo
-            if (this.titulo.getSelectedIndex() == 0) {
-                throw new Mensagens("Defina um título");
-            } else {
-                titulo = arrayTitulo[this.titulo.getSelectedIndex()];
-            }
-
-            // Adicionando dados validados no database
-            if (this.objetoProfessor.InsertProfessorBD(campus, cpf, contato, titulo, salario, nome, idade)) {
-                JOptionPane.showMessageDialog(rootPane, "Professor cadastrado com sucesso!");
-
-                this.dispose();
-            }
-
-            // Capturando exceções    
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(null, erro.getMessage());
-        } catch (NumberFormatException erro2) {
-            JOptionPane.showMessageDialog(null, "Informe um número.");
-        } catch (SQLException ex) {
-            Logger.getLogger(CadastroProfessor.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (NullPointerException erro3) {
-            JOptionPane.showMessageDialog(null, "Data de nascimento não pode ser vazia");
+        } catch (ValidacaoException ex) {
+            JOptionPane.showMessageDialog(rootPane, ex.getMessage(), "Erro de Validação", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(rootPane, "Salário deve ser um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
-
     }//GEN-LAST:event_bConfirmarActionPerformed
 
     private void bCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bCancelarActionPerformed

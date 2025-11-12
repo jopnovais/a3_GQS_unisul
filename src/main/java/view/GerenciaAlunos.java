@@ -1,17 +1,23 @@
 package view;
 
 import model.Aluno;
-import java.util.ArrayList;
+import repository.AlunoRepository;
+import repository.AlunoRepositoryImpl;
+import service.AlunoService;
+import service.AlunoServiceImpl;
+import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 public class GerenciaAlunos extends javax.swing.JFrame {
 
-    private Aluno objetoAluno;
+    private final AlunoService alunoService;
 
     public GerenciaAlunos() {
+        AlunoRepository alunoRepository = new AlunoRepositoryImpl();
+        this.alunoService = new AlunoServiceImpl(alunoRepository);
+        
         initComponents();
-        this.objetoAluno = new Aluno();
         this.carregaTabela();
     }
 
@@ -243,31 +249,27 @@ public class GerenciaAlunos extends javax.swing.JFrame {
 
     private void bDeletarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDeletarActionPerformed
         try {
-            // validando dados da interface gráfica.
-            int id = 0;
-
             if (this.jTableAlunos.getSelectedRow() == -1) {
-                throw new Mensagens("Selecione um cadastro para deletar");
-            } else {
-                id = Integer.parseInt(this.jTableAlunos.getValueAt(this.jTableAlunos.getSelectedRow(), 0).toString());
+                JOptionPane.showMessageDialog(rootPane, "Selecione um cadastro para deletar", "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
             }
+
+            int id = Integer.parseInt(this.jTableAlunos.getValueAt(this.jTableAlunos.getSelectedRow(), 0).toString());
 
             String[] options = {"Sim", "Não"};
-            int respostaUsuario = JOptionPane.showOptionDialog(null, "Tem certeza que deseja apagar este cadastro?", "Confirmar exclusão",
+            int respostaUsuario = JOptionPane.showOptionDialog(rootPane, "Tem certeza que deseja apagar este cadastro?", "Confirmar exclusão",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[1]);
 
-            if (respostaUsuario == 0) {// clicou em SIM
-
-                // envia os dados para o Professor processar
-                if (this.objetoAluno.DeleteAlunoBD(id)) {
-                    JOptionPane.showMessageDialog(rootPane, "Cadastro apagado com sucesso!");
-                }
+            if (respostaUsuario == 0) {
+                alunoService.excluir(id);
+                JOptionPane.showMessageDialog(rootPane, "Cadastro apagado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregaTabela();
             }
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(null, erro.getMessage());
-        } finally {
-            // atualiza a tabela.
-            carregaTabela();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(rootPane, "Erro ao obter ID do aluno selecionado.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bDeletarActionPerformed
 
@@ -289,16 +291,20 @@ public class GerenciaAlunos extends javax.swing.JFrame {
         DefaultTableModel modelo = (DefaultTableModel) this.jTableAlunos.getModel();
         modelo.setNumRows(0);
 
-        ArrayList<Aluno> minhalista = new ArrayList<>();
-        minhalista = objetoAluno.getMinhaLista();
+        try {
+            List<Aluno> alunos = alunoService.listarTodos();
 
-        for (Aluno a : minhalista) {
-            modelo.addRow(new Object[]{
-                a.getId(),
-                a.getNome(),
-                a.getIdade(),
-                a.getCurso(),
-                a.getFase() + "ª",});
+            for (Aluno a : alunos) {
+                modelo.addRow(new Object[]{
+                    a.getId(),
+                    a.getNome(),
+                    a.getIdade(),
+                    a.getCurso(),
+                    a.getFase() + "ª",});
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Erro ao carregar lista de alunos.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
