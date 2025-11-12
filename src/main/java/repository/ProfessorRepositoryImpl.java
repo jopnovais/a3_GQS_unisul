@@ -30,8 +30,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
             stmt.execute();
             return true;
         } catch (SQLException e) {
-            System.err.println("Erro ao salvar professor: " + e.getMessage());
-            throw new RuntimeException("Erro ao salvar professor", e);
+            throw new RuntimeException("Erro ao salvar professor: " + e.getMessage(), e);
         }
     }
     
@@ -54,8 +53,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.err.println("Erro ao atualizar professor: " + e.getMessage());
-            throw new RuntimeException("Erro ao atualizar professor", e);
+            throw new RuntimeException("Erro ao atualizar professor: " + e.getMessage(), e);
         }
     }
     
@@ -70,8 +68,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            System.err.println("Erro ao deletar professor: " + e.getMessage());
-            return false;
+            throw new RuntimeException("Erro ao deletar professor: " + e.getMessage(), e);
         }
     }
     
@@ -90,7 +87,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar professor: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar professor por ID: " + e.getMessage(), e);
         }
         
         return null;
@@ -111,7 +108,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar professor por CPF: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar professor por CPF: " + e.getMessage(), e);
         }
         
         return null;
@@ -143,7 +140,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 professores.add(criarProfessorDoResultSet(res));
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar professores: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar todos os professores: " + e.getMessage(), e);
         }
         
         return professores;
@@ -161,7 +158,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 return res.getInt("max_id");
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar maior ID: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar maior ID: " + e.getMessage(), e);
         }
         
         return 0;
