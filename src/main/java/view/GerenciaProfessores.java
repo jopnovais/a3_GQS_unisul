@@ -1,8 +1,12 @@
 package view;
 
 import model.Professor;
+import repository.ProfessorRepository;
+import repository.ProfessorRepositoryImpl;
+import service.ProfessorService;
+import service.ProfessorServiceImpl;
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -10,11 +14,13 @@ import javax.swing.table.DefaultTableModel;
 
 public class GerenciaProfessores extends javax.swing.JFrame {
 
-    private Professor objetoProfessor;
+    private final ProfessorService professorService;
 
     public GerenciaProfessores() {
+        ProfessorRepository professorRepository = new ProfessorRepositoryImpl();
+        this.professorService = new ProfessorServiceImpl(professorRepository);
+        
         initComponents();
-        this.objetoProfessor = new Professor();
         this.carregaTabela();
     }
 
@@ -230,17 +236,6 @@ public class GerenciaProfessores extends javax.swing.JFrame {
 
     public static String listaDados[] = new String[8];
 
-    private String validarFormatado(String input) {
-        String str = "";
-
-        for (int i = 0; i < input.length(); i++) {
-            if (("0123456789").contains(input.charAt(i) + "")) {
-                str += input.charAt(i) + "";
-            }
-        }
-
-        return str;
-    }
 
     private void jTableProfessoresMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableProfessoresMouseClicked
         if (this.jTableProfessores.getSelectedRow() != -1) {
@@ -254,44 +249,42 @@ public class GerenciaProfessores extends javax.swing.JFrame {
             String salario = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 7).toString();
             String id = this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 0).toString();
 
+            String salarioFormatado = professorService.validarFormatado(salario);
+
             listaDados[0] = nome;
             listaDados[1] = idade;
             listaDados[2] = campus;
             listaDados[3] = cpf;
             listaDados[4] = contato;
             listaDados[5] = titulo;
-            listaDados[6] = validarFormatado(salario);
+            listaDados[6] = salarioFormatado;
             listaDados[7] = id;
         }
     }//GEN-LAST:event_jTableProfessoresMouseClicked
 
     private void bDeletarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDeletarActionPerformed
         try {
-            // validando dados da interface gráfica.
-            int id = 0;
-
             if (this.jTableProfessores.getSelectedRow() == -1) {
-                throw new Mensagens("Selecione um cadastro para deletar");
-            } else {
-                id = Integer.parseInt(this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 0).toString());
+                JOptionPane.showMessageDialog(rootPane, "Selecione um cadastro para deletar", "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
             }
+
+            int id = Integer.parseInt(this.jTableProfessores.getValueAt(this.jTableProfessores.getSelectedRow(), 0).toString());
 
             String[] options = {"Sim", "Não"};
-            int respostaUsuario = JOptionPane.showOptionDialog(null, "Tem certeza que deseja apagar este cadastro?", "Confirmar exclusão",
+            int respostaUsuario = JOptionPane.showOptionDialog(rootPane, "Tem certeza que deseja apagar este cadastro?", "Confirmar exclusão",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[1]);
 
-            if (respostaUsuario == 0) {// clicou em SIM
-
-                // envia os dados para o Professor processar
-                if (this.objetoProfessor.DeleteProfessorBD(id)) {
-                    JOptionPane.showMessageDialog(rootPane, "Cadastro apagado com sucesso!");
-                }
+            if (respostaUsuario == 0) {
+                professorService.excluir(id);
+                JOptionPane.showMessageDialog(rootPane, "Cadastro apagado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                carregaTabela();
             }
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(rootPane, erro.getMessage());
-        } finally {
-            // atualiza a tabela.
-            carregaTabela();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(rootPane, "Erro ao obter ID do professor selecionado.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bDeletarActionPerformed
 
@@ -313,20 +306,24 @@ public class GerenciaProfessores extends javax.swing.JFrame {
         DefaultTableModel modelo = (DefaultTableModel) this.jTableProfessores.getModel();
         modelo.setNumRows(0);
 
-        ArrayList<Professor> minhalista = new ArrayList<>();
-        minhalista = objetoProfessor.getMinhaLista();
+        try {
+            List<Professor> professores = professorService.listarTodos();
 
-        for (Professor a : minhalista) {
-            modelo.addRow(new Object[]{
-                a.getId(),
-                a.getNome(),
-                a.getIdade(),
-                a.getCampus(),
-                a.getCpf(),
-                a.getContato(),
-                a.getTitulo(),
-                "R$" + a.getSalario() + ".00"
-            });
+            for (Professor a : professores) {
+                modelo.addRow(new Object[]{
+                    a.getId(),
+                    a.getNome(),
+                    a.getIdade(),
+                    a.getCampus(),
+                    a.getCpf(),
+                    a.getContato(),
+                    a.getTitulo(),
+                    "R$" + a.getSalario() + ".00"
+                });
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Erro ao carregar lista de professores.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
