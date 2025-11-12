@@ -1,7 +1,7 @@
 package repository;
 
-import db.ConnectionFactory;
 import model.Professor;
+import repository.exception.DataAccessException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,13 +10,13 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProfessorRepositoryImpl implements ProfessorRepository {
+public class ProfessorRepositoryImpl extends AbstractRepository implements ProfessorRepository {
     
     @Override
     public boolean save(Professor professor) {
         String sql = "INSERT INTO tb_professores(nome, idade, campus, cpf, contato, titulo, salario) VALUES(?, ?, ?, ?, ?, ?, ?)";
         
-        try (Connection conn = ConnectionFactory.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, professor.getNome());
@@ -30,7 +30,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
             stmt.execute();
             return true;
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao salvar professor: " + e.getMessage(), e);
+            throw new DataAccessException("Erro ao salvar professor: " + e.getMessage(), e);
         }
     }
     
@@ -38,7 +38,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
     public boolean update(Professor professor) {
         String sql = "UPDATE tb_professores SET nome = ?, idade = ?, campus = ?, cpf = ?, contato = ?, titulo = ?, salario = ? WHERE id = ?";
         
-        try (Connection conn = ConnectionFactory.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, professor.getNome());
@@ -53,30 +53,20 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
             int rowsAffected = stmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar professor: " + e.getMessage(), e);
+            throw new DataAccessException("Erro ao atualizar professor: " + e.getMessage(), e);
         }
     }
     
     @Override
     public boolean delete(int id) {
-        String sql = "DELETE FROM tb_professores WHERE id = ?";
-        
-        try (Connection conn = ConnectionFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, id);
-            int rowsAffected = stmt.executeUpdate();
-            return rowsAffected > 0;
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao deletar professor: " + e.getMessage(), e);
-        }
+        return executeDelete("tb_professores", id);
     }
     
     @Override
     public Professor findById(int id) {
         String sql = "SELECT * FROM tb_professores WHERE id = ?";
         
-        try (Connection conn = ConnectionFactory.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setInt(1, id);
@@ -87,7 +77,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar professor por ID: " + e.getMessage(), e);
+            throw new DataAccessException("Erro ao buscar professor por ID: " + e.getMessage(), e);
         }
         
         return null;
@@ -97,7 +87,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
     public Professor findByCpf(String cpf) {
         String sql = "SELECT * FROM tb_professores WHERE cpf = ?";
         
-        try (Connection conn = ConnectionFactory.getConnection();
+        try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
             stmt.setString(1, cpf);
@@ -108,7 +98,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 }
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar professor por CPF: " + e.getMessage(), e);
+            throw new DataAccessException("Erro ao buscar professor por CPF: " + e.getMessage(), e);
         }
         
         return null;
@@ -132,7 +122,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
         List<Professor> professores = new ArrayList<>();
         String sql = "SELECT * FROM tb_professores";
         
-        try (Connection conn = ConnectionFactory.getConnection();
+        try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet res = stmt.executeQuery(sql)) {
             
@@ -140,7 +130,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
                 professores.add(criarProfessorDoResultSet(res));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar todos os professores: " + e.getMessage(), e);
+            throw new DataAccessException("Erro ao buscar todos os professores: " + e.getMessage(), e);
         }
         
         return professores;
@@ -148,20 +138,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
     
     @Override
     public int getMaxId() {
-        String sql = "SELECT MAX(id) as max_id FROM tb_professores";
-        
-        try (Connection conn = ConnectionFactory.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet res = stmt.executeQuery(sql)) {
-            
-            if (res.next()) {
-                return res.getInt("max_id");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar maior ID: " + e.getMessage(), e);
-        }
-        
-        return 0;
+        return executeMaxIdQuery("tb_professores");
     }
 }
 
