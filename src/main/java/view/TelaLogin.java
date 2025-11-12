@@ -1,14 +1,17 @@
 package view;
 
-import DAO.AlunoDAO;
+import db.ConnectionFactory;
+import java.sql.Connection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 public class TelaLogin extends javax.swing.JFrame {
 
-    public static String passwordDB = "1234";
-    public static String userDB = "teste";
+    @Deprecated
+    public static String passwordDB = "";
+    @Deprecated
+    public static String userDB = "";
 
     public TelaLogin() {
         initComponents();
@@ -16,7 +19,6 @@ public class TelaLogin extends javax.swing.JFrame {
     }
 
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         login = new javax.swing.JButton();
@@ -33,7 +35,7 @@ public class TelaLogin extends javax.swing.JFrame {
         setBackground(new java.awt.Color(51, 255, 51));
         setResizable(false);
 
-        login.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        login.setFont(new java.awt.Font("Segoe UI", 0, 18)); 
         login.setText("LOGIN");
         login.setToolTipText("ENTER");
         login.setAlignmentX(0.5F);
@@ -43,23 +45,25 @@ public class TelaLogin extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 14)); 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("SisUni - Sistema de Gerenciamento Universitário");
 
-        password.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        password.setFont(new java.awt.Font("Segoe UI", 0, 24)); 
         password.setHorizontalAlignment(javax.swing.JTextField.CENTER);
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 10)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 10)); 
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel2.setText("DIGITE A SENHA (MySQL)");
+        jLabel2.setText("Sistema SQLite - Clique em LOGIN");
 
-        user.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        user.setFont(new java.awt.Font("Segoe UI", 0, 24)); 
         user.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        user.setVisible(false);
 
-        jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 10)); // NOI18N
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 10)); 
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel3.setText("DIGITE O USUÁRIO (MySQL)");
+        jLabel3.setText("");
+        jLabel3.setVisible(false);
         setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -107,36 +111,32 @@ public class TelaLogin extends javax.swing.JFrame {
 
         pack();
         setLocationRelativeTo(null);
-    }// </editor-fold>//GEN-END:initComponents
+    }
 
-    private boolean checarConexao() throws Mensagens {
-        AlunoDAO teste = new AlunoDAO();
-
-        if (teste.getConexao() != null) {
-            JOptionPane.showMessageDialog(rootPane, "Conexão efetuada com sucesso!");
-            return true;
-        } else {
-            JOptionPane.showMessageDialog(rootPane, "Conexão falhou!");
+    private boolean checarConexao() {
+        try {
+            Connection conexao = ConnectionFactory.getConnection();
+            if (conexao != null) {
+                conexao.close();
+                JOptionPane.showMessageDialog(rootPane, "Conexão com SQLite efetuada com sucesso!");
+                return true;
+            } else {
+                JOptionPane.showMessageDialog(rootPane, "Conexão falhou!");
+                return false;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(rootPane, "Erro ao conectar: " + e.getMessage());
             return false;
         }
     }
 
     private void loginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginActionPerformed
-        String str = String.copyValueOf(this.password.getPassword());
-        this.passwordDB = str;
-        this.userDB = this.user.getText();
-
-        try {
-            if (checarConexao()) {
-                TelaPrincipal tela = new TelaPrincipal();
-                tela.setVisible(true);
-                this.dispose();
-            }
-        } catch (Mensagens ex) {
-            Logger.getLogger(TelaLogin.class.getName()).log(Level.SEVERE, null, ex);
+        if (checarConexao()) {
+            TelaPrincipal tela = new TelaPrincipal();
+            tela.setVisible(true);
+            this.dispose();
         }
-
-    }//GEN-LAST:event_loginActionPerformed
+    }
 
     /**
      * @param args the command line arguments
@@ -149,7 +149,6 @@ public class TelaLogin extends javax.swing.JFrame {
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -157,5 +156,4 @@ public class TelaLogin extends javax.swing.JFrame {
     private javax.swing.JButton login;
     private javax.swing.JPasswordField password;
     private javax.swing.JTextField user;
-    // End of variables declaration//GEN-END:variables
 }
