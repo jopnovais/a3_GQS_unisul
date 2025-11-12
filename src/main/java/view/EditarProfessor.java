@@ -1,23 +1,30 @@
 package view;
 
-import com.formdev.flatlaf.json.ParseException;
+import model.Professor;
+import repository.ProfessorRepository;
+import repository.ProfessorRepositoryImpl;
+import service.ProfessorService;
+import service.ProfessorServiceImpl;
+import service.exception.ValidacaoException;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.text.MaskFormatter;
-import model.Professor;
-import java.util.ArrayList;
 
 public class EditarProfessor extends javax.swing.JFrame {
 
-    private Professor objetoProfessor;
+    private final ProfessorService professorService;
+    private int idProfessor;
 
     public EditarProfessor() throws java.text.ParseException {
+        ProfessorRepository professorRepository = new ProfessorRepositoryImpl();
+        this.professorService = new ProfessorServiceImpl(professorRepository);
+        
         initComponents();
         formatarCampos();
         preencheCampos();
         getRootPane().setDefaultButton(this.bConfirmar);
-        this.objetoProfessor = new Professor();
     }
 
     /**
@@ -191,33 +198,9 @@ public class EditarProfessor extends javax.swing.JFrame {
             mask2.install(contatoFormatado);
             MaskFormatter mask3 = new MaskFormatter("R$#####");
             mask3.install(salarioFormatado);
-        } catch (ParseException ex) {
+        } catch (java.text.ParseException ex) {
             JOptionPane.showMessageDialog(rootPane, "Erro ao formatar campos", "ERRO", JOptionPane.ERROR);
         }
-    }
-
-    private boolean verificaCpf(String cpf) {
-        ArrayList<Professor> minhalista = new ArrayList<>();
-        minhalista = objetoProfessor.getMinhaLista();
-
-        for (Professor a : minhalista) {
-            if ((cpf.equals(a.getCpf())) && (a.getId() != Integer.parseInt(GerenciaProfessores.listaDados[7]))) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String validarFormatado(String input) {
-        String str = "";
-
-        for (int i = 0; i < input.length(); i++) {
-            if (("0123456789").contains(input.charAt(i) + "")) {
-                str += input.charAt(i) + "";
-            }
-        }
-
-        return str;
     }
 
     private String editSalario(String input) {
@@ -231,53 +214,16 @@ public class EditarProfessor extends javax.swing.JFrame {
     }
 
     private void preencheCampos() {
-        String[] arrayCampus = {"-",
-            "Continente",
-            "Dib Mussi",
-            "Ilha",
-            "Pedra Branca",
-            "Trajano",
-            "Tubarão"};
-        String[] arrayTitulo = {"-",
-            "Graduação",
-            "Especialização",
-            "Mestrado",
-            "Doutorado"};
-
-        int indexCampus = 0;
-        int indexTitulo = 0;
-
-        for (int i = 0; i < 7; i++) {
-            if (GerenciaProfessores.listaDados[2].equalsIgnoreCase(arrayCampus[i])) {
-                indexCampus = i;
-            }
-        }
-
-        for (int j = 0; j < 5; j++) {
-            if (GerenciaProfessores.listaDados[5].equalsIgnoreCase(arrayTitulo[j])) {
-                indexTitulo = j;
-            }
-        }
-
-        this.nome.setText(GerenciaProfessores.listaDados[0]);
-        this.idade.setText(GerenciaProfessores.listaDados[1]);
-        this.campus.setSelectedIndex(indexCampus);
-        this.cpfFormatado.setText(GerenciaProfessores.listaDados[3]);
-        this.contatoFormatado.setText(GerenciaProfessores.listaDados[4]);
-        this.titulo.setSelectedIndex(indexTitulo);
-        this.salarioFormatado.setText(editSalario(GerenciaProfessores.listaDados[6]));
-    }
-
-    private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
         try {
-            String nome = "";
-            String campus = "";
-            String cpf = "";
-            String contato = "";
-            int idade = 0;
-            double salario = 0;
-            int id = Integer.parseInt(GerenciaProfessores.listaDados[7]);
-            String titulo = "";
+            this.idProfessor = Integer.parseInt(GerenciaProfessores.listaDados[7]);
+            Professor professor = professorService.buscarPorId(this.idProfessor);
+            
+            if (professor == null) {
+                JOptionPane.showMessageDialog(rootPane, "Professor não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                this.dispose();
+                return;
+            }
+
             String[] arrayCampus = {"-",
                 "Continente",
                 "Dib Mussi",
@@ -291,72 +237,87 @@ public class EditarProfessor extends javax.swing.JFrame {
                 "Mestrado",
                 "Doutorado"};
 
-            // Setando nome
-            if (this.nome.getText().length() < 2) {
-                throw new Mensagens("Nome deve conter ao menos 2 caracteres.");
-            } else {
-                nome = this.nome.getText();
+            int indexCampus = 0;
+            int indexTitulo = 0;
+
+            for (int i = 0; i < 7; i++) {
+                if (professor.getCampus().equalsIgnoreCase(arrayCampus[i])) {
+                    indexCampus = i;
+                }
             }
 
-            // Setando campus
-            if (this.campus.getSelectedIndex() == 0) {
-                throw new Mensagens("Escolha o campus");
-            } else {
-                campus = arrayCampus[this.campus.getSelectedIndex()];
+            for (int j = 0; j < 5; j++) {
+                if (professor.getTitulo().equalsIgnoreCase(arrayTitulo[j])) {
+                    indexTitulo = j;
+                }
             }
 
-            // Setando cpf
-            if (validarFormatado(this.cpfFormatado.getText()).length() != 11) {
-                throw new Mensagens("O campo CPF deve possuir 11 caracteres numéricos");
-            } else if (this.verificaCpf(this.cpfFormatado.getText())) {
-                throw new Mensagens("CPF já cadastrado no sistema");
-            } else {
-                cpf = this.cpfFormatado.getText();
-            }
+            this.nome.setText(professor.getNome());
+            this.idade.setText(String.valueOf(professor.getIdade()));
+            this.campus.setSelectedIndex(indexCampus);
+            this.cpfFormatado.setText(professor.getCpf());
+            this.contatoFormatado.setText(professor.getContato());
+            this.titulo.setSelectedIndex(indexTitulo);
+            this.salarioFormatado.setText(String.valueOf((int) professor.getSalario()));
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(rootPane, "Erro ao carregar dados do professor.", "Erro", JOptionPane.ERROR_MESSAGE);
+            this.dispose();
+        }
+    }
 
-            // Setando contato
-            if (validarFormatado(this.contatoFormatado.getText()).length() != 11) {
-                throw new Mensagens("O campo contato deve possuir 11 caracteres numéricos");
-            } else {
-                contato = this.contatoFormatado.getText();
-            }
+    private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
+        try {
+            String[] arrayCampus = {"-",
+                "Continente",
+                "Dib Mussi",
+                "Ilha",
+                "Pedra Branca",
+                "Trajano",
+                "Tubarão"};
+            String[] arrayTitulo = {"-",
+                "Graduação",
+                "Especialização",
+                "Mestrado",
+                "Doutorado"};
 
-            // Setando idade
-            if (Integer.parseInt(this.idade.getText()) < 11) {
-                throw new Mensagens("Idade inválida");
-            }
-            if (this.idade.getText().equals("")) {
-                throw new Mensagens("Idade não pode ser vazio");
-            } else {
+            int idade;
+            try {
                 idade = Integer.parseInt(this.idade.getText());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(rootPane, "Idade deve ser um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-            // Setando salário
-            if (validarFormatado(this.salarioFormatado.getText()).length() < 4) {
-                throw new Mensagens("O campo salário deve possuir no mínimo 4 caracteres numéricos");
-            } else {
-                salario = Double.parseDouble(validarFormatado(this.salarioFormatado.getText()));
-            }
+            String campus = arrayCampus[this.campus.getSelectedIndex()];
+            String cpf = this.cpfFormatado.getText();
+            String contato = this.contatoFormatado.getText();
+            String titulo = arrayTitulo[this.titulo.getSelectedIndex()];
+            
+            String salarioFormatado = professorService.validarFormatado(this.salarioFormatado.getText());
+            double salario = Double.parseDouble(salarioFormatado);
 
-            // Setando titulo
-            if (this.titulo.getSelectedIndex() == 0) {
-                throw new Mensagens("Defina um título");
-            } else {
-                titulo = arrayTitulo[this.titulo.getSelectedIndex()];
-            }
+            Professor professor = new Professor();
+            professor.setId(this.idProfessor);
+            professor.setNome(this.nome.getText());
+            professor.setIdade(idade);
+            professor.setCampus(campus);
+            professor.setCpf(cpf);
+            professor.setContato(contato);
+            professor.setTitulo(titulo);
+            professor.setSalario(salario);
 
-            // Adicionando dados validados no database
-            if (this.objetoProfessor.UpdateProfessorBD(campus, cpf, contato, titulo, salario, id, nome, idade)) {
-                JOptionPane.showMessageDialog(rootPane, "Professor alterado com sucesso!");
+            professorService.atualizar(professor);
 
-                this.dispose();
-            }
+            JOptionPane.showMessageDialog(rootPane, "Professor alterado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
 
-            // Capturando exceções    
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(rootPane, erro.getMessage());
-        } catch (NumberFormatException erro2) {
-            JOptionPane.showMessageDialog(rootPane, "Informe um número.");
+        } catch (ValidacaoException ex) {
+            JOptionPane.showMessageDialog(rootPane, ex.getMessage(), "Erro de Validação", JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(rootPane, "Salário deve ser um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bConfirmarActionPerformed
 

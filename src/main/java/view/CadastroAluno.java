@@ -1,21 +1,23 @@
 package view;
 
 import model.Aluno;
-import java.sql.SQLException;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import repository.AlunoRepository;
+import repository.AlunoRepositoryImpl;
+import service.AlunoService;
+import service.AlunoServiceImpl;
+import service.exception.ValidacaoException;
 import javax.swing.JOptionPane;
 
 public class CadastroAluno extends javax.swing.JFrame {
 
-    private Aluno objetoAluno;
+    private final AlunoService alunoService;
 
     public CadastroAluno() {
+        AlunoRepository alunoRepository = new AlunoRepositoryImpl();
+        this.alunoService = new AlunoServiceImpl(alunoRepository);
+        
         initComponents();
         getRootPane().setDefaultButton(this.bConfirmar);
-        this.objetoAluno = new Aluno();
     }
 
     /**
@@ -138,29 +140,8 @@ public class CadastroAluno extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private int calculaIdade(java.util.Date dataNasc) {
-        Calendar dataNascimento = new GregorianCalendar();
-        dataNascimento.setTime(dataNasc);
-
-        Calendar today = Calendar.getInstance();
-
-        int age = today.get(Calendar.YEAR) - dataNascimento.get(Calendar.YEAR);
-
-        dataNascimento.add(Calendar.YEAR, age);
-
-        if (today.before(dataNascimento)) {
-            age--;
-        }
-
-        return age;
-    }
-
     private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
         try {
-            String nome = "";
-            int idade = 0;
-            String curso = "";
-            int fase = 0;
             String[] arrayCursos = {"-",
                 "Administração",
                 "Análise e Desenvolvimento de Sistemas",
@@ -173,44 +154,31 @@ public class CadastroAluno extends javax.swing.JFrame {
                 "Sistemas de Informação"};
             int[] arrayFases = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-            // Setando nome
-            if (this.nome.getText().length() < 2) {
-                throw new Mensagens("Nome deve conter ao menos 2 caracteres.");
-            } else {
-                nome = this.nome.getText();
+            if (this.idade.getDate() == null) {
+                JOptionPane.showMessageDialog(rootPane, "Data de nascimento é obrigatória.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-            // Setando idade
-            if (calculaIdade(this.idade.getDate()) < 11) {
-                throw new Mensagens("Idade inválida");
-            } else {
-                idade = calculaIdade(this.idade.getDate());
-            }
+            int idadeCalculada = alunoService.calcularIdade(this.idade.getDate());
+            String curso = arrayCursos[this.curso.getSelectedIndex()];
+            int fase = arrayFases[this.fase.getSelectedIndex()];
 
-            // Setando curso
-            if (this.curso.getSelectedIndex() == 0) {
-                throw new Mensagens("Escolha o curso");
-            } else {
-                curso = arrayCursos[this.curso.getSelectedIndex()];
-            }
+            Aluno aluno = new Aluno();
+            aluno.setNome(this.nome.getText());
+            aluno.setIdade(idadeCalculada);
+            aluno.setCurso(curso);
+            aluno.setFase(fase);
 
-            // Setando fase
-            fase = arrayFases[this.fase.getSelectedIndex()];
+            alunoService.salvar(aluno);
 
-            // Adicionando dados validados no database
-            if (this.objetoAluno.InsertAlunoBD(curso, fase, nome, idade)) {
-                JOptionPane.showMessageDialog(rootPane, "Aluno cadastrado com sucesso!");
+            JOptionPane.showMessageDialog(rootPane, "Aluno cadastrado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
 
-                this.dispose();
-            }
-
-            // Capturando exceções
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(null, erro.getMessage());
-        } catch (NumberFormatException erro2) {
-            JOptionPane.showMessageDialog(null, "Informe um número.");
-        } catch (SQLException ex) {
-            Logger.getLogger(CadastroAluno.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ValidacaoException ex) {
+            JOptionPane.showMessageDialog(rootPane, ex.getMessage(), "Erro de Validação", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bConfirmarActionPerformed
 
