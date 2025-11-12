@@ -173,7 +173,7 @@ public class TelaPrincipal extends javax.swing.JFrame {
         try {
             FlatDarkLaf.setup();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Erro ao configurar tema FlatLaf: " + e.getMessage());
         }
 
         java.awt.EventQueue.invokeLater(new Runnable() {
