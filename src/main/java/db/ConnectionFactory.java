@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 public class ConnectionFactory {
     
-    private static final String DB_URL = "jdbc:sqlite:projeto_faculdade.db";
+    private static final String DB_URL = "jdbc:sqlite:db_escola.db";
     
     public static Connection getConnection() throws SQLException {
         try {
