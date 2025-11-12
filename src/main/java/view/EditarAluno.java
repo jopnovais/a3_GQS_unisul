@@ -1,17 +1,25 @@
 package view;
 
 import model.Aluno;
+import repository.AlunoRepository;
+import repository.AlunoRepositoryImpl;
+import service.AlunoService;
+import service.AlunoServiceImpl;
+import service.exception.ValidacaoException;
 import javax.swing.JOptionPane;
 
 public class EditarAluno extends javax.swing.JFrame {
 
-    private Aluno objetoAluno;
+    private final AlunoService alunoService;
+    private int idAluno;
 
     public EditarAluno() {
+        AlunoRepository alunoRepository = new AlunoRepositoryImpl();
+        this.alunoService = new AlunoServiceImpl(alunoRepository);
+        
         initComponents();
         preencheCampos();
         getRootPane().setDefaultButton(this.bConfirmar);
-        this.objetoAluno = new Aluno();
     }
 
     /**
@@ -134,46 +142,16 @@ public class EditarAluno extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void preencheCampos() {
-        String[] arrayCursos = {"-",
-            "Administração",
-            "Análise e Desenvolvimento de Sistemas",
-            "Arquitetura e Urbanismo",
-            "Ciências Contábeis",
-            "Ciências da Computação",
-            "Design",
-            "Design de Moda",
-            "Relações Internacionais",
-            "Sistemas de Informação"};
-        int[] arrayFases = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-        int indexCursos = 0;
-        int indexFases = 0;
-
-        for (int i = 0; i < 10; i++) {
-            if (GerenciaAlunos.listaDados2[3].equalsIgnoreCase(arrayCursos[i])) {
-                indexCursos = i;
-            }
-        }
-
-        for (int i = 0; i < 10; i++) {
-            if (Integer.parseInt(GerenciaAlunos.listaDados2[4]) == arrayFases[i]) {
-                indexFases = i;
-            }
-        }
-
-        this.nome.setText(GerenciaAlunos.listaDados2[1]);
-        this.idade.setText(GerenciaAlunos.listaDados2[2]);
-        this.curso.setSelectedIndex(indexCursos);
-        this.fase.setSelectedIndex(indexFases);
-    }
-
-    private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
         try {
-            String nome = "";
-            int idade = 0;
-            String curso = "";
-            int fase = 0;
-            int id = Integer.parseInt(GerenciaAlunos.listaDados2[0]);
+            this.idAluno = Integer.parseInt(GerenciaAlunos.listaDados2[0]);
+            Aluno aluno = alunoService.buscarPorId(this.idAluno);
+            
+            if (aluno == null) {
+                JOptionPane.showMessageDialog(rootPane, "Aluno não encontrado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                this.dispose();
+                return;
+            }
+
             String[] arrayCursos = {"-",
                 "Administração",
                 "Análise e Desenvolvimento de Sistemas",
@@ -186,42 +164,73 @@ public class EditarAluno extends javax.swing.JFrame {
                 "Sistemas de Informação"};
             int[] arrayFases = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-            // Setando nome
-            if (this.nome.getText().length() < 2) {
-                throw new Mensagens("Nome deve conter ao menos 2 caracteres.");
-            } else {
-                nome = this.nome.getText();
+            int indexCursos = 0;
+            int indexFases = 0;
+
+            for (int i = 0; i < 10; i++) {
+                if (aluno.getCurso().equalsIgnoreCase(arrayCursos[i])) {
+                    indexCursos = i;
+                }
             }
 
-            // Setando idade
-            if (Integer.parseInt(this.idade.getText()) < 11) {
-                throw new Mensagens("Idade inválida");
-            } else {
+            for (int i = 0; i < 10; i++) {
+                if (aluno.getFase() == arrayFases[i]) {
+                    indexFases = i;
+                }
+            }
+
+            this.nome.setText(aluno.getNome());
+            this.idade.setText(String.valueOf(aluno.getIdade()));
+            this.curso.setSelectedIndex(indexCursos);
+            this.fase.setSelectedIndex(indexFases);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(rootPane, "Erro ao carregar dados do aluno.", "Erro", JOptionPane.ERROR_MESSAGE);
+            this.dispose();
+        }
+    }
+
+    private void bConfirmarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bConfirmarActionPerformed
+        try {
+            String[] arrayCursos = {"-",
+                "Administração",
+                "Análise e Desenvolvimento de Sistemas",
+                "Arquitetura e Urbanismo",
+                "Ciências Contábeis",
+                "Ciências da Computação",
+                "Design",
+                "Design de Moda",
+                "Relações Internacionais",
+                "Sistemas de Informação"};
+            int[] arrayFases = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+            int idade;
+            try {
                 idade = Integer.parseInt(this.idade.getText());
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(rootPane, "Idade deve ser um número válido.", "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-            // Setando curso
-            if (this.curso.getSelectedIndex() == 0) {
-                throw new Mensagens("Escolha um curso");
-            } else {
-                curso = arrayCursos[this.curso.getSelectedIndex()];
-            }
+            String curso = arrayCursos[this.curso.getSelectedIndex()];
+            int fase = arrayFases[this.fase.getSelectedIndex()];
 
-            // Setando fase
-            fase = arrayFases[this.fase.getSelectedIndex()];
+            Aluno aluno = new Aluno();
+            aluno.setId(this.idAluno);
+            aluno.setNome(this.nome.getText());
+            aluno.setIdade(idade);
+            aluno.setCurso(curso);
+            aluno.setFase(fase);
 
-            // Adicionando dados validados no database
-            if (this.objetoAluno.UpdateAlunoBD(curso, fase, id, nome, idade)) {
-                JOptionPane.showMessageDialog(rootPane, "Aluno alterado com sucesso!");
+            alunoService.atualizar(aluno);
 
-                this.dispose();
-            }
+            JOptionPane.showMessageDialog(rootPane, "Aluno alterado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            this.dispose();
 
-            // Capturando exceções
-        } catch (Mensagens erro) {
-            JOptionPane.showMessageDialog(null, erro.getMessage());
-        } catch (NumberFormatException erro2) {
-            JOptionPane.showMessageDialog(null, "Informe um número.");
+        } catch (ValidacaoException ex) {
+            JOptionPane.showMessageDialog(rootPane, ex.getMessage(), "Erro de Validação", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bConfirmarActionPerformed
 
