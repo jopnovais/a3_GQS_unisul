@@ -86,16 +86,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
             
             try (ResultSet res = stmt.executeQuery()) {
                 if (res.next()) {
-                    Professor professor = new Professor();
-                    professor.setId(res.getInt("id"));
-                    professor.setNome(res.getString("nome"));
-                    professor.setIdade(res.getInt("idade"));
-                    professor.setCampus(res.getString("campus"));
-                    professor.setCpf(res.getString("cpf"));
-                    professor.setContato(res.getString("contato"));
-                    professor.setTitulo(res.getString("titulo"));
-                    professor.setSalario(res.getDouble("salario"));
-                    return professor;
+                    return criarProfessorDoResultSet(res);
                 }
             }
         } catch (SQLException e) {
@@ -103,6 +94,40 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
         }
         
         return null;
+    }
+    
+    @Override
+    public Professor findByCpf(String cpf) {
+        String sql = "SELECT * FROM tb_professores WHERE cpf = ?";
+        
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, cpf);
+            
+            try (ResultSet res = stmt.executeQuery()) {
+                if (res.next()) {
+                    return criarProfessorDoResultSet(res);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao buscar professor por CPF: " + e.getMessage());
+        }
+        
+        return null;
+    }
+    
+    private Professor criarProfessorDoResultSet(ResultSet res) throws SQLException {
+        Professor professor = new Professor();
+        professor.setId(res.getInt("id"));
+        professor.setNome(res.getString("nome"));
+        professor.setIdade(res.getInt("idade"));
+        professor.setCampus(res.getString("campus"));
+        professor.setCpf(res.getString("cpf"));
+        professor.setContato(res.getString("contato"));
+        professor.setTitulo(res.getString("titulo"));
+        professor.setSalario(res.getDouble("salario"));
+        return professor;
     }
     
     @Override
@@ -115,16 +140,7 @@ public class ProfessorRepositoryImpl implements ProfessorRepository {
              ResultSet res = stmt.executeQuery(sql)) {
             
             while (res.next()) {
-                Professor professor = new Professor();
-                professor.setId(res.getInt("id"));
-                professor.setNome(res.getString("nome"));
-                professor.setIdade(res.getInt("idade"));
-                professor.setCampus(res.getString("campus"));
-                professor.setCpf(res.getString("cpf"));
-                professor.setContato(res.getString("contato"));
-                professor.setTitulo(res.getString("titulo"));
-                professor.setSalario(res.getDouble("salario"));
-                professores.add(professor);
+                professores.add(criarProfessorDoResultSet(res));
             }
         } catch (SQLException e) {
             System.err.println("Erro ao buscar professores: " + e.getMessage());
