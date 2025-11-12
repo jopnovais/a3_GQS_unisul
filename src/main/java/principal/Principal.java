@@ -12,7 +12,7 @@ public class Principal {
         try {
             FlatDarkLaf.setup();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Erro ao configurar tema FlatLaf: " + e.getMessage());
         }
 
         try {
