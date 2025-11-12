@@ -1,12 +1,10 @@
 name: Java CI/CD (Dev, HML, Prod)
 
 on:
-  # Gatilhos
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  # Permite o trigger manual (para "Prod")
   workflow_dispatch:
 
 jobs:
@@ -53,17 +51,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Instala o Monitor Virtual (Xvfb) para testes Swing
       - name: Instalar Xvfb
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
-      # Compila e roda testes com JaCoCo usando Xvfb
-      # -Dmaven.test.failure.ignore=true permite continuar mesmo com falhas de teste
-      # (necessário porque alguns testes antigos do MySQL ainda podem falhar)
       - name: Compilar e Rodar Testes com JaCoCo (Xvfb)
         run: xvfb-run --auto-servernum mvn -B clean verify -Dmaven.test.failure.ignore=true
 
-      # Salva o relatório de cobertura como artefato
       - name: Upload Relatório JaCoCo
         uses: actions/upload-artifact@v4
         with:
@@ -93,13 +86,22 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Baixa o relatório JaCoCo do build Java 17
+      - name: Compilar o projeto
+        run: mvn -B clean compile test-compile
+
       - name: Download Relatório JaCoCo
         uses: actions/download-artifact@v4
         with:
           name: jacoco-report-17
+          path: .
 
-      # Cache das dependências do Sonar
+      - name: Preparar Relatório JaCoCo
+        run: |
+          mkdir -p target/site/jacoco
+          if [ -f jacoco.xml ]; then
+            cp jacoco.xml target/site/jacoco/jacoco.xml
+          fi
+
       - name: Cache SonarCloud
         uses: actions/cache@v4
         with:
@@ -107,7 +109,6 @@ jobs:
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Envia a análise para o SonarCloud
       - name: Analisar com SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
