@@ -1,8 +1,8 @@
 # SisUni - Sistema de Gerenciamento Universitário
 
-Este é um projeto de desktop desenvolvido em Java com interface gráfica Swing para um sistema de cadastro de alunos e professores. As informações são armazenadas em um banco de dados MySQL.
+Este é um projeto de desktop desenvolvido em Java com interface gráfica Swing para um sistema de cadastro de alunos e professores. As informações são armazenadas em um banco de dados SQLite.
 
-## 👥 Colaboradores
+##  Colaboradores
 
 - Allana Thayná Santos Pimentel - 10724263997 - Github: [Allana-Pimentel](https://github.com/Allana-Pimentel)
 - Davi Cardoso Rhee - 1072221147 - Github: [DaviRhee](https://github.com/DaviRhee)
@@ -10,23 +10,23 @@ Este é um projeto de desktop desenvolvido em Java com interface gráfica Swing 
 - João Pedro de Novais Sombra - 1072221731 - Github: [jopnovais](https://github.com/jopnovais)
 - Luiz Felipe Correa Soares - 1072223007 - Github: [LFSCorr](https://github.com/LFSCorr)
 
-## 📋 Pré-requisitos
+##  Pré-requisitos
 
 Antes de executar o projeto, certifique-se de ter instalado:
 
-1. **Java JDK 8 ou superior**
+1. Java JDK 8 ou superior
    - Verifique a instalação: `java -version`
    - Se não tiver, baixe em: [Oracle JDK](https://www.oracle.com/java/technologies/downloads/) ou [OpenJDK](https://openjdk.org/)
 
-2. **Maven 3.6 ou superior**
+2. Maven 3.6 ou superior
    - Verifique a instalação: `mvn -version`
    - Se não tiver, baixe em: [Maven Download](https://maven.apache.org/download.cgi)
 
-3. **MySQL Server 8.0 ou superior**
-   - Verifique a instalação: `mysql --version`
-   - Se não tiver, baixe em: [MySQL Download](https://dev.mysql.com/downloads/mysql/)
+3. SQLite (opcional - já incluído como dependência)
+   - O banco de dados SQLite é criado automaticamente na primeira execução
+   - Não requer instalação ou configuração adicional
 
-## 🚀 Passo a Passo para Executar o Projeto
+##  Passo a Passo para Executar o Projeto
 
 ### Passo 1: Clone o Repositório
 
@@ -35,49 +35,7 @@ git clone <url-do-repositorio>
 cd a3_GQS_unisul
 ```
 
-### Passo 2: Instale e Configure o MySQL
-
-1. **Instale o MySQL Server** (se ainda não tiver):
-   - Siga as instruções do instalador
-   - **IMPORTANTE**: Anote o usuário e senha do MySQL que você configurou durante a instalação
-
-2. **Inicie o serviço MySQL**:
-   - **Windows**: Verifique se o serviço MySQL está rodando no Gerenciador de Serviços
-   - **Linux/Mac**: Execute `sudo systemctl start mysql` ou `brew services start mysql`
-
-3. **Crie o banco de dados**:
-   - Abra o MySQL Workbench ou linha de comando do MySQL
-   - Execute o script SQL fornecido no arquivo `db_escola.sql`:
-   
-   ```bash
-   mysql -u root -p < db_escola.sql
-   ```
-   
-   Ou manualmente no MySQL:
-   ```sql
-   CREATE SCHEMA IF NOT EXISTS `db_escola` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-   USE `db_escola`;
-   -- Execute o restante do script db_escola.sql
-   ```
-
-### Passo 3: Configure as Credenciais do MySQL no Projeto
-
-1. Abra o arquivo `src/main/java/principal/Principal.java`
-
-2. Localize as linhas onde as credenciais são configuradas (aproximadamente linha 20-21):
-
-   ```java
-   TelaLogin.userDB = "root";
-   TelaLogin.passwordDB = "password";
-   ```
-
-3. **Substitua pelos seus dados do MySQL**:
-   ```java
-   TelaLogin.userDB = "seu_usuario_mysql";        // Exemplo: "root"
-   TelaLogin.passwordDB = "sua_senha_mysql";      // Exemplo: "MinhaSenha123"
-   ```
-
-### Passo 4: Baixe as Dependências do Maven
+### Passo 2: Baixe as Dependências do Maven
 
 Execute o comando para baixar todas as dependências do projeto:
 
@@ -86,11 +44,14 @@ mvn clean install
 ```
 
 Este comando irá:
-- Baixar as dependências (MySQL Connector, FlatLaf, JCalendar)
+- Baixar as dependências (SQLite JDBC, FlatLaf, JCalendar, JUnit, JaCoCo)
 - Compilar o projeto
-- Executar os testes (se houver)
+- Executar os testes de integração
+- Gerar o relatório de cobertura de código
 
-### Passo 5: Execute o Projeto
+Nota: O banco de dados SQLite (`db_escola.db`) será criado automaticamente na raiz do projeto na primeira execução.
+
+### Passo 3: Execute o Projeto
 
 Você tem três opções para executar o projeto:
 
@@ -129,17 +90,19 @@ a3_GQS_unisul/
 │   │       │   └── Principal.java        # Classe principal da aplicação
 │   │       ├── view/                      # Interfaces gráficas (Swing)
 │   │       ├── model/                     # Modelos de dados (Aluno, Professor)
-│   │       └── DAO/                       # Data Access Object (acesso ao banco)
+│   │       ├── db/                        # ConnectionFactory (SQLite)
+│   │       ├── repository/                # Camada de repositório (Repository Pattern)
+│   │       ├── service/                   # Camada de serviço (lógica de negócio)
+│   │       └── DAO/                       # Data Access Object (legado - não utilizado)
 │   └── test/
 │       └── java/                          # Testes unitários
-├── db_escola.sql                          # Script SQL para criar o banco
 ├── pom.xml                                # Configuração do Maven
 └── README.md                              # Este arquivo
 ```
 
 ## 🗄️ Estrutura do Banco de Dados
 
-O banco de dados `db_escola` possui duas tabelas principais:
+O banco de dados SQLite (`db_escola.db`) possui duas tabelas principais:
 
 ### Tabela: `tb_alunos`
 - `id` (INT, PRIMARY KEY)
@@ -158,74 +121,142 @@ O banco de dados `db_escola` possui duas tabelas principais:
 - `titulo` (VARCHAR(45))
 - `salario` (DOUBLE)
 
-## 🔧 Configurações Importantes
+## Configurações Importantes
 
-- **Host do Banco**: `localhost`
-- **Porta do MySQL**: `3306`
-- **Nome do Banco**: `db_escola`
-- **Driver JDBC**: `com.mysql.cj.jdbc.Driver`
+- Tipo de Banco: SQLite
+- Arquivo do Banco: `db_escola.db` (criado automaticamente na raiz do projeto)
+- Driver JDBC: `org.sqlite.JDBC`
+- String de Conexão: `jdbc:sqlite:db_escola.db`
 
-## ⚠️ Solução de Problemas
+## Solução de Problemas
 
-### Erro: "Erro ao conectar com o banco de dados MySQL"
+### Erro: "Erro ao conectar ao banco de dados SQLite"
 
-**Possíveis causas e soluções:**
+Possíveis causas e soluções:
 
-1. **MySQL não está rodando**:
-   - Verifique se o serviço MySQL está ativo
-   - Windows: Gerenciador de Serviços → MySQL
-   - Linux: `sudo systemctl status mysql`
+1. Permissões de escrita:
+   - Verifique se o diretório do projeto tem permissão de escrita
+   - O arquivo `db_escola.db` será criado automaticamente
 
-2. **Banco de dados não existe**:
-   - Execute o script `db_escola.sql` novamente
+2. Arquivo de banco corrompido:
+   - Delete o arquivo `db_escola.db` e execute novamente
+   - O banco será recriado automaticamente
 
-3. **Credenciais incorretas**:
-   - Verifique o usuário e senha no arquivo `Principal.java`
-   - Teste a conexão manualmente no MySQL Workbench
+3Driver SQLite não encontradO:
+   - Execute `mvn clean install` para baixar as dependências
+   - Verifique se a dependência `sqlite-jdbc` está no `pom.xml`
 
-4. **Porta 3306 bloqueada**:
-   - Verifique se a porta 3306 está acessível
-   - Windows: Firewall → Permitir aplicativo através do firewall
+## Executando os Testes
 
-### Erro: "O driver não foi encontrado"
+O projeto possui testes de integração para validar o funcionamento da camada de repositório (Repository) com o banco de dados SQLite.
 
-- Certifique-se de que o comando `mvn clean install` foi executado com sucesso
-- Verifique se a dependência do MySQL Connector está no `pom.xml`
+### Executar Todos os Testes
 
-### Erro de Compilação Java
-
-- Verifique se você está usando Java JDK 8 ou superior
-- Execute `mvn clean` e depois `mvn install` novamente
-
-## 🧪 Executando os Testes
-
-Para executar os testes unitários:
+Para executar todos os testes do projeto:
 
 ```bash
 mvn test
 ```
 
-**Nota**: Os testes requerem que o MySQL esteja rodando e as credenciais estejam configuradas corretamente.
+### Executar Testes Específicos
 
-## 📚 Tecnologias Utilizadas
+Para executar apenas os testes de `AlunoRepositoryImpl`:
 
-- **Java 8+**: Linguagem de programação
-- **Maven**: Gerenciador de dependências
-- **MySQL**: Banco de dados relacional
-- **Swing**: Biblioteca para interface gráfica
-- **FlatLaf**: Tema moderno para Swing
-- **JCalendar**: Componente de calendário
-- **JUnit**: Framework de testes
+```bash
+mvn test -Dtest=AlunoRepositoryImplTest
+```
 
-## 📝 Licença
+Para executar apenas os testes de `ProfessorRepositoryImpl`:
 
-Este é um projeto educacional desenvolvido para fins acadêmicos.
+```bash
+mvn test -Dtest=ProfessorRepositoryImplTest
+```
 
-## 🤝 Contribuindo
+### Gerar Relatório de Cobertura (JaCoCo)
 
-Este é um projeto acadêmico. Para sugestões ou correções, abra uma issue ou entre em contato com os colaboradores.
+Para gerar o relatório de cobertura de código:
 
----
+```bash
+mvn clean verify
+```
 
-**Desenvolvido com ❤️ para fins educacionais**
+Após executar, o relatório HTML será gerado em:
+```
+target/site/jacoco/index.html
+```
+
+Para abrir o relatório no navegador:
+
+Windows:
+```bash
+start target\site\jacoco\index.html
+```
+
+Linux/Mac:
+```bash
+xdg-open target/site/jacoco/index.html
+# ou
+open target/site/jacoco/index.html
+```
+
+### Casos de Teste Implementados
+
+#### Testes de AlunoRepositoryImpl (9 casos)
+
+| # | Método | Descrição | Status |
+|---|--------|-----------|--------|
+| 1 | `save()` | Salvar aluno válido - deve gerar ID | OK |
+| 2 | `save()` | Salvar aluno com nome nulo - deve salvar com null | OK |
+| 3 | `save()` | Salvar dois alunos diferentes - deve salvar ambos | OK |
+| 4 | `findById()` | Buscar por ID existente - deve retornar aluno | OK |
+| 5 | `findById()` | Buscar por ID inexistente - deve retornar null | OK |
+| 6 | `findAll()` | Listar quando banco vazio - deve retornar lista vazia | OK |
+| 7 | `findAll()` | Listar após salvar 3 alunos - deve retornar 3 alunos | OK |
+| 8 | `update()` | Atualizar nome do aluno - deve atualizar corretamente | OK |
+| 9 | `delete()` | Excluir aluno - deve remover do banco | OK |
+
+#### Testes de ProfessorRepositoryImpl (8 casos)
+
+| # | Método | Descrição | Status |
+|---|--------|-----------|--------|
+| 1 | `save()` | Salvar professor válido - deve gerar ID | OK |
+| 2 | `save()` | Salvar professor com campo nulo - deve salvar com null | OK |
+| 3 | `findById()` | Buscar por ID existente - deve retornar professor | OK |
+| 4 | `findById()` | Buscar por ID inexistente - deve retornar null | OK |
+| 5 | `findAll()` | Listar quando banco vazio - deve retornar lista vazia | OK |
+| 6 | `findAll()` | Listar após salvar 2 professores - deve retornar 2 professores | OK |
+| 7 | `update()` | Atualizar contato do professor - deve atualizar corretamente | OK |
+| 8 | `delete()` | Excluir professor - deve remover do banco | OK |
+
+Total: 17 testes de integração
+
+### Estrutura dos Testes
+
+Os testes estão localizados em:
+```
+src/test/java/repository/
+├── AlunoRepositoryImplTest.java
+└── ProfessorRepositoryImplTest.java
+```
+
+### Tecnologias de Teste
+
+- JUnit 5: (Jupiter): Framework de testes
+- JaCoCo: Análise de cobertura de código
+- SQLite: Banco de dados em memória para testes de integração
+
+# Tecnologias Utilizadas
+
+- Java 8+: Linguagem de programação
+- Maven: Gerenciador de dependências
+- SQLite: Banco de dados relacional embutido
+- Swing: Biblioteca para interface gráfica
+- FlatLaf: Tema moderno para Swing
+- JCalendar: Componente de calendário
+- JUnit 5: Framework de testes
+- JaCoCo: Análise de cobertura de código
+- SonarCloud: Análise de qualidade de código (CI/CD)
+
+
+
 
