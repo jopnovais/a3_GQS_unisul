@@ -1,0 +1,173 @@
+name: Java CI/CD (Dev, HML, Prod)
+
+on:
+  # Gatilhos
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  # Permite o trigger manual (para "Prod")
+  workflow_dispatch:
+
+jobs:
+  #----------------------------------------------
+  # 1. AMBIENTE DEV: Testar e Analisar
+  #----------------------------------------------
+  build_and_test_dev:
+    name: 1. Build & Test (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+
+    # Estratégia de Matriz: Rodar para Java 8, 11 e 17
+    strategy:
+      matrix:
+        java: [ '8', '11', '17' ]
+
+    steps:
+      # 1.1 Baixa o código
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          # fetch-depth: 0 é necessário para o Sonar analisar o histórico
+          fetch-depth: 0
+
+      # 1.2 Configura o JDK (versão da matriz)
+      - name: Configurar JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 1.3 Compila e Roda Testes (JaCoCo)
+      # O 'verify' executa o ciclo de vida até a geração do relatório JaCoCo
+      - name: Compilar e Rodar Testes com JaCoCo
+        run: mvn -B clean verify
+
+      # 1.4 Salva o relatório de cobertura como artefato
+      - name: Upload Relatório JaCoCo (para Sonar)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report-${{ matrix.java }}
+          path: target/site/jacoco/jacoco.xml
+          # Ignora se não houver testes (para o build não falhar agora)
+          if-no-files-found: ignore
+
+  #----------------------------------------------
+  # 2. AMBIENTE DEV: Análise SonarCloud
+  #----------------------------------------------
+  sonar_analysis_dev:
+    name: 2. SonarCloud Analysis
+    runs-on: ubuntu-latest
+    # Depende que todos os builds da matriz (8, 11, 17) terminem
+    needs: build_and_test_dev
+    # Rodar apenas em PRs ou push para main
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+
+    steps:
+      # 2.1 Baixa o código
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2.2 Configura JDK 17 (apenas para rodar o Sonar scanner)
+      - name: Configurar JDK 17 (para Sonar)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 2.3 Baixa o relatório JaCoCo (usamos o do build Java 17)
+      - name: Download Relatório JaCoCo
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-report-17
+
+      # 2.4 Cache das dependências do Sonar
+      - name: Cache SonarCloud
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      # 2.5 Envia a análise para o SonarCloud
+      - name: Enviar Análise para SonarCloud
+        env:
+          # Tokens configurados nos Secrets do GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mvn -B sonar:sonar
+        # O 'sonar:sonar' vai ler as propriedades no pom.xml
+        # e o relatório JaCoCo baixado
+
+  #----------------------------------------------
+  # 3. AMBIENTE HML: Criar o JAR
+  #----------------------------------------------
+  build_jar_hml:
+    name: 3. (HML) Build JAR Executável
+    runs-on: ubuntu-latest
+    # Depende da análise do Sonar (que depende dos testes)
+    needs: sonar_analysis_dev
+    # Rodar apenas em merge para 'main' (não em PRs)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      # 3.1 Baixa o código
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # 3.2 Configura JDK 8 (para garantir compatibilidade do JAR final)
+      - name: Configurar JDK 8 (para build final)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 3.3 Empacota o JAR (pulando testes, pois já rodaram)
+      - name: Empacotar o JAR
+        run: mvn -B package -DskipTests
+
+      # 3.4 Salva o JAR como artefato para o job de "Prod"
+      - name: Upload do JAR como Artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: projeto-faculdade-jar
+          # O Maven geralmente coloca o JAR em 'target/'
+          path: target/*.jar
+
+  #----------------------------------------------
+  # 4. AMBIENTE PROD: Criar Release (Manual)
+  #----------------------------------------------
+  create_release_prod:
+    name: 4. (PROD) Criar Release Manual
+    runs-on: ubuntu-latest
+    # Depende do JAR criado pela HML
+    needs: build_jar_hml
+    # Rodar apenas manualmente (workflow_dispatch)
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      # 4.1 Baixa o JAR que a HML salvou
+      - name: Download do JAR (Artefato da HML)
+        uses: actions/download-artifact@v4
+        with:
+          name: projeto-faculdade-jar
+
+      # 4.2 Cria a Release no GitHub
+      - name: Criar Release no GitHub
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Cria uma tag única baseada no número da execução
+          tag_name: v1.0.${{ github.run_number }}
+          name: Release v1.0.${{ github.run_number }}
+          body: "Release automática do projeto da faculdade."
+          # Anexa o(s) JAR(s) baixados na etapa anterior
+          files: "*.jar"
+          draft: false
+          prerelease: false
+
