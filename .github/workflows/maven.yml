@@ -89,26 +89,6 @@ jobs:
       - name: Compilar o projeto
         run: mvn -B clean compile test-compile
 
-      - name: Download Relatório JaCoCo
-        uses: actions/download-artifact@v4
-        with:
-          name: jacoco-report-17
-          path: .
-
-      - name: Preparar Relatório JaCoCo
-        run: |
-          mkdir -p target/site/jacoco
-          if [ -f jacoco.xml ]; then
-            cp jacoco.xml target/site/jacoco/jacoco.xml
-          fi
-
-      - name: Cache SonarCloud
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: Detectar tipo de branch
         id: branch-info
         run: |
@@ -123,13 +103,35 @@ jobs:
             echo "Branch de desenvolvimento detectada - análise sem exigência de cobertura"
           fi
 
+      - name: Download Relatório JaCoCo (apenas para main)
+        if: steps.branch-info.outputs.is_main == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-report-17
+          path: .
+
+      - name: Preparar Relatório JaCoCo (apenas para main)
+        if: steps.branch-info.outputs.is_main == 'true'
+        run: |
+          mkdir -p target/site/jacoco
+          if [ -f jacoco.xml ]; then
+            cp jacoco.xml target/site/jacoco/jacoco.xml
+          fi
+
+      - name: Cache SonarCloud
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: Analisar com SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ steps.branch-info.outputs.is_main }}" == "true" ]; then
-            echo "📊 Branch main detectada → Quality Gate rigoroso (80%)"
+            echo "📊 Branch main detectada → Quality Gate rigoroso (80% cobertura exigida)"
             mvn -B verify sonar:sonar \
               -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
               -Dsonar.organization=jopnovais \
@@ -137,13 +139,12 @@ jobs:
               -Dsonar.qualitygate.wait=true \
               -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
           else
-            echo "🧪 Branch de desenvolvimento detectada → Quality Gate flexível"
+            echo "🧪 Branch de desenvolvimento detectada → Análise sem exigência de cobertura"
             mvn -B verify sonar:sonar \
               -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
               -Dsonar.organization=jopnovais \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.qualitygate.wait=false \
-              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+              -Dsonar.qualitygate.wait=false
           fi
 
   #----------------------------------------------

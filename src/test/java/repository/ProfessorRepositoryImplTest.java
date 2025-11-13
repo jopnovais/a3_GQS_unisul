@@ -126,6 +126,34 @@ class ProfessorRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("Caso 4.5: Buscar professor por CPF existente - deve retornar professor correto")
+    void testFindByCpf_CpfExistente_DeveRetornarProfessor() {
+        Professor professor = new Professor();
+        professor.setNome("João Santos");
+        professor.setIdade(42);
+        professor.setCampus("Campus Tubarão");
+        professor.setCpf("123.456.789-00");
+        professor.setContato("(48) 99999-9999");
+        professor.setTitulo("Mestre");
+        professor.setSalario(7500.00);
+
+        repository.save(professor);
+        
+        Professor professorEncontrado = repository.findByCpf("123.456.789-00");
+        
+        assertNotNull(professorEncontrado);
+        assertEquals("João Santos", professorEncontrado.getNome());
+        assertEquals("123.456.789-00", professorEncontrado.getCpf());
+    }
+
+    @Test
+    @DisplayName("Caso 4.6: Buscar professor por CPF inexistente - deve retornar null")
+    void testFindByCpf_CpfInexistente_DeveRetornarNull() {
+        Professor professorEncontrado = repository.findByCpf("999.999.999-99");
+        assertNull(professorEncontrado);
+    }
+
+    @Test
     @DisplayName("Caso 5: Listar todos os professores quando banco está vazio - deve retornar lista vazia")
     void testFindAll_BancoVazio_DeveRetornarListaVazia() {
         List<Professor> professores = repository.findAll();
@@ -164,6 +192,30 @@ class ProfessorRepositoryImplTest {
         assertEquals(2, professores.size());
         assertEquals("Roberto Santos", professores.get(0).getNome());
         assertEquals("Fernanda Costa", professores.get(1).getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 6.5: Testar update com ID inexistente - deve retornar false")
+    void testUpdate_IdInexistente_DeveRetornarFalse() {
+        Professor professor = new Professor();
+        professor.setId(999);
+        professor.setNome("Professor Inexistente");
+        professor.setIdade(40);
+        professor.setCampus("Campus Teste");
+        professor.setCpf("999.999.999-99");
+        professor.setContato("(48) 99999-9999");
+        professor.setTitulo("Mestre");
+        professor.setSalario(5000.00);
+
+        boolean resultado = repository.update(professor);
+        assertFalse(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 6.6: Testar delete com ID inexistente - deve retornar false")
+    void testDelete_IdInexistente_DeveRetornarFalse() {
+        boolean resultado = repository.delete(999);
+        assertFalse(resultado);
     }
 
     @Test
@@ -263,6 +315,35 @@ class ProfessorRepositoryImplTest {
         Professor professorComMaxId = repository.findById(maxId);
         assertNotNull(professorComMaxId);
         assertEquals("Professor 2", professorComMaxId.getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 11: Testar findAll com múltiplos professores - deve retornar todos")
+    void testFindAll_MultiplosProfessores_DeveRetornarTodos() {
+        Professor professor1 = new Professor();
+        professor1.setNome("Professor A");
+        professor1.setIdade(40);
+        professor1.setCampus("Campus A");
+        professor1.setCpf("111.111.111-11");
+        professor1.setContato("(48) 11111-1111");
+        professor1.setTitulo("Doutor");
+        professor1.setSalario(5000.00);
+        repository.save(professor1);
+
+        Professor professor2 = new Professor();
+        professor2.setNome("Professor B");
+        professor2.setIdade(41);
+        professor2.setCampus("Campus B");
+        professor2.setCpf("222.222.222-22");
+        professor2.setContato("(48) 22222-2222");
+        professor2.setTitulo("Mestre");
+        professor2.setSalario(6000.00);
+        repository.save(professor2);
+
+        List<Professor> professores = repository.findAll();
+        
+        assertNotNull(professores);
+        assertTrue(professores.size() >= 2);
     }
 }
 

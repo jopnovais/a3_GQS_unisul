@@ -136,6 +136,27 @@ class AlunoRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("Caso 5.5: Testar update com ID inexistente - deve retornar false")
+    void testUpdate_IdInexistente_DeveRetornarFalse() {
+        Aluno aluno = new Aluno();
+        aluno.setId(999);
+        aluno.setNome("Aluno Inexistente");
+        aluno.setIdade(20);
+        aluno.setCurso("Curso Teste");
+        aluno.setFase(1);
+
+        boolean resultado = repository.update(aluno);
+        assertFalse(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 5.6: Testar delete com ID inexistente - deve retornar false")
+    void testDelete_IdInexistente_DeveRetornarFalse() {
+        boolean resultado = repository.delete(999);
+        assertFalse(resultado);
+    }
+
+    @Test
     @DisplayName("Caso 6: Listar todos os alunos quando banco está vazio - deve retornar lista vazia")
     void testFindAll_BancoVazio_DeveRetornarListaVazia() {
         List<Aluno> alunos = repository.findAll();
@@ -267,6 +288,29 @@ class AlunoRepositoryImplTest {
         Aluno alunoComMaxId = repository.findById(maxId);
         assertNotNull(alunoComMaxId);
         assertEquals("Aluno 3", alunoComMaxId.getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 12: Testar findAll com múltiplos alunos - deve retornar todos")
+    void testFindAll_MultiplosAlunos_DeveRetornarTodos() {
+        Aluno aluno1 = new Aluno();
+        aluno1.setNome("Aluno A");
+        aluno1.setIdade(20);
+        aluno1.setCurso("Curso A");
+        aluno1.setFase(1);
+        repository.save(aluno1);
+
+        Aluno aluno2 = new Aluno();
+        aluno2.setNome("Aluno B");
+        aluno2.setIdade(21);
+        aluno2.setCurso("Curso B");
+        aluno2.setFase(2);
+        repository.save(aluno2);
+
+        List<Aluno> alunos = repository.findAll();
+        
+        assertNotNull(alunos);
+        assertTrue(alunos.size() >= 2);
     }
 }
 
