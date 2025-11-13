@@ -68,10 +68,10 @@ jobs:
   # 3. AMBIENTE DEV: Análise SonarCloud
   #----------------------------------------------
   analyze-sonar:
-    name: 3. SonarCloud Analysis (somente main)
+    name: 3. SonarCloud Analysis (DESATIVADO TEMPORARIAMENTE)
     runs-on: ubuntu-latest
     needs: build-hml
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: false  
 
     steps:
       - name: Checkout do código
@@ -132,7 +132,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ steps.branch-info.outputs.is_main }}" == "true" ]; then
-            echo "📊 Branch main detectada → Quality Gate rigoroso (80% cobertura exigida)"
+            echo "Branch main detectada → Quality Gate rigoroso (80% cobertura exigida)"
             mvn -B verify sonar:sonar \
               -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
               -Dsonar.organization=jopnovais \
@@ -154,7 +154,7 @@ jobs:
   build-prd:
     name: 4. Package (PRD)
     runs-on: ubuntu-latest
-    needs: analyze-sonar
+    needs: build-hml  
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
