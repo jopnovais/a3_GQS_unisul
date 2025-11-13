@@ -4,15 +4,19 @@ import view.TelaPrincipal;
 import com.formdev.flatlaf.FlatDarkLaf;
 import db.ConnectionFactory;
 import java.sql.Connection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 public class Principal {
+
+    private static final Logger LOGGER = Logger.getLogger(Principal.class.getName());
 
     public static void main(String[] args) {
         try {
             FlatDarkLaf.setup();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Erro ao inicializar o FlatLaf", e);
         }
 
         try {

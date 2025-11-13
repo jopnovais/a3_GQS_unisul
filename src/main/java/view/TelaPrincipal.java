@@ -1,8 +1,12 @@
 package view;
 
 import com.formdev.flatlaf.FlatDarkLaf;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TelaPrincipal extends javax.swing.JFrame {
+
+    private static final Logger LOGGER = Logger.getLogger(TelaPrincipal.class.getName());
 
     /**
      * Creates new form TelaPrincipal
@@ -173,7 +177,7 @@ public class TelaPrincipal extends javax.swing.JFrame {
         try {
             FlatDarkLaf.setup();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Erro inesperado na Tela Principal", e);
         }
 
         java.awt.EventQueue.invokeLater(new Runnable() {
