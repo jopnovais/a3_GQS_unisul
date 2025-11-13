@@ -69,5 +69,36 @@ class AlunoServiceImplTest {
         assertEquals("Nome é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any(Aluno.class));
     }
+
+    @Test
+    @DisplayName("Caso 4: Excluir um aluno - deve chamar repository.delete()")
+    void testExcluirDeveChamarRepositorio() {
+        int id = 5;
+        
+        alunoService.excluir(id);
+        
+        verify(alunoRepository, times(1)).delete(id);
+    }
+
+    @Test
+    @DisplayName("Caso 5: Buscar aluno por ID - deve chamar repository.findById()")
+    void testBuscarPorIdDeveChamarRepositorio() {
+        Aluno alunoMock = new Aluno();
+        alunoMock.setId(1);
+        alunoMock.setNome("Aluno Teste");
+        alunoMock.setIdade(20);
+        alunoMock.setCurso("Teste");
+        alunoMock.setFase(1);
+        
+        when(alunoRepository.findById(1)).thenReturn(alunoMock);
+        
+        Aluno resultado = alunoService.buscarPorId(1);
+        
+        verify(alunoRepository, times(1)).findById(1);
+        assertNotNull(resultado);
+        assertEquals(alunoMock, resultado);
+        assertEquals(1, resultado.getId());
+        assertEquals("Aluno Teste", resultado.getNome());
+    }
 }
 
