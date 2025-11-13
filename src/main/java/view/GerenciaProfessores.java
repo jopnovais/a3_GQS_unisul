@@ -283,7 +283,6 @@ public class GerenciaProfessores extends javax.swing.JFrame {
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(rootPane, "Erro ao obter ID do professor selecionado.", "Erro", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            ex.printStackTrace();
             JOptionPane.showMessageDialog(rootPane, "Ocorreu um erro inesperado. Contate o suporte.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_bDeletarActionPerformed
@@ -322,7 +321,6 @@ public class GerenciaProfessores extends javax.swing.JFrame {
                 });
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
             JOptionPane.showMessageDialog(rootPane, "Erro ao carregar lista de professores.", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
