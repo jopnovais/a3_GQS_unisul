@@ -71,7 +71,96 @@ class AlunoServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 4: Excluir um aluno - deve chamar repository.delete()")
+    @DisplayName("Caso 4: Tentar salvar um aluno nulo - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarAlunoNulo() {
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(null);
+        });
+        
+        assertEquals("Aluno não pode ser nulo.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 5: Tentar salvar um aluno com nome contendo apenas espaços - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarNomeComEspacos() {
+        alunoValido.setNome("   ");
+        
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+        
+        assertEquals("Nome é obrigatório.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 6: Tentar salvar um aluno com nome de 1 caractere - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarNomeComUmCaractere() {
+        alunoValido.setNome("A");
+        
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+        
+        assertEquals("Nome deve conter ao menos 2 caracteres.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 7: Tentar salvar um aluno com idade menor que 11 - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarIdadeMenorQueOnze() {
+        alunoValido.setIdade(10);
+        
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+        
+        assertEquals("Idade inválida. Deve ser maior ou igual a 11 anos.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 8: Tentar salvar um aluno com curso nulo - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarCursoNulo() {
+        alunoValido.setCurso(null);
+        
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+        
+        assertEquals("Curso é obrigatório.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 9: Tentar salvar um aluno com curso vazio - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarCursoVazio() {
+        alunoValido.setCurso("");
+        
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+        
+        assertEquals("Curso é obrigatório.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 10: Tentar salvar um aluno com curso igual a '-' - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarCursoDefault() {
+        alunoValido.setCurso("-");
+        
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+        
+        assertEquals("Curso é obrigatório.", exception.getMessage());
+        verify(alunoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Caso 11: Excluir um aluno - deve chamar repository.delete()")
     void testExcluirDeveChamarRepositorio() {
         int id = 5;
         
@@ -81,7 +170,7 @@ class AlunoServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 5: Buscar aluno por ID - deve chamar repository.findById()")
+    @DisplayName("Caso 12: Buscar aluno por ID - deve chamar repository.findById()")
     void testBuscarPorIdDeveChamarRepositorio() {
         Aluno alunoMock = new Aluno();
         alunoMock.setId(1);
