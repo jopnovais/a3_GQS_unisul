@@ -18,7 +18,7 @@ public abstract class AbstractRepository {
             throw new IllegalArgumentException("Nome de tabela inválido: " + tableName);
         }
         
-        String sql = "SELECT MAX(id) as max_id FROM " + tableName;
+        String sql = buildMaxIdQuery(tableName);
         
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
@@ -34,6 +34,15 @@ public abstract class AbstractRepository {
         return 0;
     }
     
+    private String buildMaxIdQuery(String tableName) {
+        if ("tb_alunos".equals(tableName)) {
+            return "SELECT MAX(id) as max_id FROM tb_alunos";
+        } else if ("tb_professores".equals(tableName)) {
+            return "SELECT MAX(id) as max_id FROM tb_professores";
+        }
+        throw new IllegalArgumentException("Nome de tabela inválido: " + tableName);
+    }
+    
     private boolean isValidTableName(String tableName) {
         return "tb_alunos".equals(tableName) || "tb_professores".equals(tableName);
     }
@@ -43,7 +52,7 @@ public abstract class AbstractRepository {
             throw new IllegalArgumentException("Nome de tabela inválido: " + tableName);
         }
         
-        String sql = "DELETE FROM " + tableName + " WHERE id = ?";
+        String sql = buildDeleteQuery(tableName);
         
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -54,6 +63,15 @@ public abstract class AbstractRepository {
         } catch (SQLException e) {
             throw new DataAccessException("Erro ao deletar registro: " + e.getMessage(), e);
         }
+    }
+    
+    private String buildDeleteQuery(String tableName) {
+        if ("tb_alunos".equals(tableName)) {
+            return "DELETE FROM tb_alunos WHERE id = ?";
+        } else if ("tb_professores".equals(tableName)) {
+            return "DELETE FROM tb_professores WHERE id = ?";
+        }
+        throw new IllegalArgumentException("Nome de tabela inválido: " + tableName);
     }
 }
 
