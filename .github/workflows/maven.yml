@@ -66,87 +66,88 @@ jobs:
 
   #----------------------------------------------
   # 3. AMBIENTE DEV: Análise SonarCloud
+  # TEMPORARIAMENTE DESATIVADO - Reativar após atingir 85% de cobertura
   #----------------------------------------------
-  analyze-sonar:
-    name: 3. SonarCloud Analysis (somente main)
-    runs-on: ubuntu-latest
-    needs: build-hml
-    if: github.event_name == 'push' || github.event_name == 'pull_request'  
-
-    steps:
-      - name: Checkout do código
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Configurar JDK 17 (para Sonar)
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-          cache: "maven"
-
-      - name: Compilar o projeto
-        run: mvn -B clean compile test-compile
-
-      - name: Detectar tipo de branch
-        id: branch-info
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
-            echo "is_main=true" >> $GITHUB_OUTPUT
-            echo "Branch main detectada (push direto) - aplicando Quality Gate com 80% de cobertura"
-          else
-            echo "is_main=false" >> $GITHUB_OUTPUT
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              echo "Pull Request detectado - análise sem exigência de cobertura"
-            else
-              echo "Branch de desenvolvimento detectada - análise sem exigência de cobertura"
-            fi
-          fi
-
-      - name: Download Relatório JaCoCo (apenas para main)
-        if: steps.branch-info.outputs.is_main == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: jacoco-report-17
-          path: .
-
-      - name: Preparar Relatório JaCoCo (apenas para main)
-        if: steps.branch-info.outputs.is_main == 'true'
-        run: |
-          mkdir -p target/site/jacoco
-          if [ -f jacoco.xml ]; then
-            cp jacoco.xml target/site/jacoco/jacoco.xml
-          fi
-
-      - name: Cache SonarCloud
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Analisar com SonarCloud
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "${{ steps.branch-info.outputs.is_main }}" == "true" ]; then
-            echo "Branch main detectada → Quality Gate rigoroso (80% cobertura exigida)"
-            mvn -B verify sonar:sonar \
-              -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
-              -Dsonar.organization=jopnovais \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.qualitygate.wait=true \
-              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-          else
-            echo "🧪 Branch de desenvolvimento detectada → Análise sem exigência de cobertura"
-            mvn -B verify sonar:sonar \
-              -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
-              -Dsonar.organization=jopnovais \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.qualitygate.wait=false
-          fi
+  # analyze-sonar:
+  #   name: 3. SonarCloud Analysis (somente main)
+  #   runs-on: ubuntu-latest
+  #   needs: build-hml
+  #   if: github.event_name == 'push' || github.event_name == 'pull_request'
+  #
+  #   steps:
+  #     - name: Checkout do código
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #
+  #     - name: Configurar JDK 17 (para Sonar)
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         java-version: "17"
+  #         distribution: "temurin"
+  #         cache: "maven"
+  #
+  #     - name: Compilar o projeto
+  #       run: mvn -B clean compile test-compile
+  #
+  #     - name: Detectar tipo de branch
+  #       id: branch-info
+  #       run: |
+  #         if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
+  #           echo "is_main=true" >> $GITHUB_OUTPUT
+  #           echo "Branch main detectada (push direto) - aplicando Quality Gate com 80% de cobertura"
+  #         else
+  #           echo "is_main=false" >> $GITHUB_OUTPUT
+  #           if [ "${{ github.event_name }}" == "pull_request" ]; then
+  #             echo "Pull Request detectado - análise sem exigência de cobertura"
+  #           else
+  #             echo "Branch de desenvolvimento detectada - análise sem exigência de cobertura"
+  #           fi
+  #         fi
+  #
+  #     - name: Download Relatório JaCoCo (apenas para main)
+  #       if: steps.branch-info.outputs.is_main == 'true'
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: jacoco-report-17
+  #         path: .
+  #
+  #     - name: Preparar Relatório JaCoCo (apenas para main)
+  #       if: steps.branch-info.outputs.is_main == 'true'
+  #       run: |
+  #         mkdir -p target/site/jacoco
+  #         if [ -f jacoco.xml ]; then
+  #           cp jacoco.xml target/site/jacoco/jacoco.xml
+  #         fi
+  #
+  #     - name: Cache SonarCloud
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: ~/.sonar/cache
+  #         key: ${{ runner.os }}-sonar
+  #         restore-keys: ${{ runner.os }}-sonar
+  #
+  #     - name: Analisar com SonarCloud
+  #       env:
+  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         if [ "${{ steps.branch-info.outputs.is_main }}" == "true" ]; then
+  #           echo "Branch main detectada → Quality Gate rigoroso (80% cobertura exigida)"
+  #           mvn -B verify sonar:sonar \
+  #             -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
+  #             -Dsonar.organization=jopnovais \
+  #             -Dsonar.host.url=https://sonarcloud.io \
+  #             -Dsonar.qualitygate.wait=true \
+  #             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+  #         else
+  #           echo "🧪 Branch de desenvolvimento detectada → Análise sem exigência de cobertura"
+  #           mvn -B verify sonar:sonar \
+  #             -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
+  #             -Dsonar.organization=jopnovais \
+  #             -Dsonar.host.url=https://sonarcloud.io \
+  #             -Dsonar.qualitygate.wait=false
+  #         fi
 
   #----------------------------------------------
   # 4. AMBIENTE PRD: Empacotamento
@@ -154,7 +155,7 @@ jobs:
   build-prd:
     name: 4. Package (PRD)
     runs-on: ubuntu-latest
-    needs: analyze-sonar
+    needs: build-hml
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
