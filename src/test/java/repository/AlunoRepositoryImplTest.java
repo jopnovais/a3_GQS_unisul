@@ -229,5 +229,44 @@ class AlunoRepositoryImplTest {
         Aluno alunoDepois = repository.findById(idGerado);
         assertNull(alunoDepois);
     }
+
+    @Test
+    @DisplayName("Caso 10: getMaxId quando tabela está vazia - deve retornar 0")
+    void testGetMaxId_TabelaVazia_DeveRetornarZero() {
+        int maxId = repository.getMaxId();
+        assertEquals(0, maxId);
+    }
+
+    @Test
+    @DisplayName("Caso 11: getMaxId após salvar múltiplos alunos - deve retornar maior ID")
+    void testGetMaxId_MultiplosAlunos_DeveRetornarMaiorId() {
+        Aluno aluno1 = new Aluno();
+        aluno1.setNome("Aluno 1");
+        aluno1.setIdade(20);
+        aluno1.setCurso("Curso 1");
+        aluno1.setFase(1);
+        repository.save(aluno1);
+
+        Aluno aluno2 = new Aluno();
+        aluno2.setNome("Aluno 2");
+        aluno2.setIdade(21);
+        aluno2.setCurso("Curso 2");
+        aluno2.setFase(2);
+        repository.save(aluno2);
+
+        Aluno aluno3 = new Aluno();
+        aluno3.setNome("Aluno 3");
+        aluno3.setIdade(22);
+        aluno3.setCurso("Curso 3");
+        aluno3.setFase(3);
+        repository.save(aluno3);
+
+        int maxId = repository.getMaxId();
+        assertTrue(maxId >= 3);
+        
+        Aluno alunoComMaxId = repository.findById(maxId);
+        assertNotNull(alunoComMaxId);
+        assertEquals("Aluno 3", alunoComMaxId.getNome());
+    }
 }
 

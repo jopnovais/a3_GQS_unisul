@@ -14,6 +14,10 @@ public abstract class AbstractRepository {
     }
     
     protected int executeMaxIdQuery(String tableName) {
+        if (!isValidTableName(tableName)) {
+            throw new IllegalArgumentException("Nome de tabela inválido: " + tableName);
+        }
+        
         String sql = "SELECT MAX(id) as max_id FROM " + tableName;
         
         try (Connection conn = getConnection();
@@ -30,7 +34,15 @@ public abstract class AbstractRepository {
         return 0;
     }
     
+    private boolean isValidTableName(String tableName) {
+        return "tb_alunos".equals(tableName) || "tb_professores".equals(tableName);
+    }
+    
     protected boolean executeDelete(String tableName, int id) {
+        if (!isValidTableName(tableName)) {
+            throw new IllegalArgumentException("Nome de tabela inválido: " + tableName);
+        }
+        
         String sql = "DELETE FROM " + tableName + " WHERE id = ?";
         
         try (Connection conn = getConnection();
