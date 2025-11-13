@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,8 +92,8 @@ public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepo
         String sql = "SELECT * FROM tb_alunos";
         
         try (Connection conn = getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet res = stmt.executeQuery(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet res = stmt.executeQuery()) {
             
             while (res.next()) {
                 alunos.add(criarAlunoDoResultSet(res));

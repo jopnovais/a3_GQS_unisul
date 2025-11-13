@@ -226,5 +226,43 @@ class ProfessorRepositoryImplTest {
         Professor professorDepois = repository.findById(idGerado);
         assertNull(professorDepois);
     }
+
+    @Test
+    @DisplayName("Caso 9: getMaxId quando tabela está vazia - deve retornar 0")
+    void testGetMaxId_TabelaVazia_DeveRetornarZero() {
+        int maxId = repository.getMaxId();
+        assertEquals(0, maxId);
+    }
+
+    @Test
+    @DisplayName("Caso 10: getMaxId após salvar múltiplos professores - deve retornar maior ID")
+    void testGetMaxId_MultiplosProfessores_DeveRetornarMaiorId() {
+        Professor professor1 = new Professor();
+        professor1.setNome("Professor 1");
+        professor1.setIdade(40);
+        professor1.setCampus("Campus 1");
+        professor1.setCpf("111.111.111-11");
+        professor1.setContato("(48) 11111-1111");
+        professor1.setTitulo("Doutor");
+        professor1.setSalario(5000.00);
+        repository.save(professor1);
+
+        Professor professor2 = new Professor();
+        professor2.setNome("Professor 2");
+        professor2.setIdade(41);
+        professor2.setCampus("Campus 2");
+        professor2.setCpf("222.222.222-22");
+        professor2.setContato("(48) 22222-2222");
+        professor2.setTitulo("Mestre");
+        professor2.setSalario(6000.00);
+        repository.save(professor2);
+
+        int maxId = repository.getMaxId();
+        assertTrue(maxId >= 2);
+        
+        Professor professorComMaxId = repository.findById(maxId);
+        assertNotNull(professorComMaxId);
+        assertEquals("Professor 2", professorComMaxId.getNome());
+    }
 }
 
