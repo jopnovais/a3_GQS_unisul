@@ -92,15 +92,16 @@ jobs:
       - name: Detectar tipo de branch
         id: branch-info
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
             echo "is_main=true" >> $GITHUB_OUTPUT
-            echo "Branch main detectada (push) - aplicando Quality Gate com 80% de cobertura"
-          elif [ "${{ github.event_name }}" == "pull_request" ] && [ "${{ github.base_ref }}" == "main" ]; then
-            echo "is_main=true" >> $GITHUB_OUTPUT
-            echo "Pull Request para main detectada - aplicando Quality Gate com 80% de cobertura"
+            echo "Branch main detectada (push direto) - aplicando Quality Gate com 80% de cobertura"
           else
             echo "is_main=false" >> $GITHUB_OUTPUT
-            echo "Branch de desenvolvimento detectada - análise sem exigência de cobertura"
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "Pull Request detectado - análise sem exigência de cobertura"
+            else
+              echo "Branch de desenvolvimento detectada - análise sem exigência de cobertura"
+            fi
           fi
 
       - name: Download Relatório JaCoCo (apenas para main)
