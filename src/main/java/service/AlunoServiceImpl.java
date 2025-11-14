@@ -80,13 +80,9 @@ public class AlunoServiceImpl implements AlunoService {
             throw new ValidacaoException("Nome deve conter ao menos 2 caracteres.");
         }
 
-        // --- NOVA VALIDAÇÃO ADICIONADA ---
-        // Esta regex (.*\\p{L}.*) verifica se a string contém ao menos uma letra Unicode (incluindo acentos)
-        // Se o nome NÃO contiver (ex: "123" ou "!@#"), a validação falha.
         if (!aluno.getNome().matches(".*\\p{L}.*")) {
             throw new ValidacaoException("Nome é inválido (deve conter ao menos uma letra).");
         }
-        // --- FIM DA NOVA VALIDAÇÃO ---
 
         if (aluno.getIdade() < 11) {
             throw new ValidacaoException("Idade inválida. Deve ser maior ou igual a 11 anos.");

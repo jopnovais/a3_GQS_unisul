@@ -26,7 +26,6 @@ public class Principal {
                 try {
                     conexao.close();
                 } catch (Exception e) {
-                    // Ignorar
                 }
 
                 java.awt.EventQueue.invokeLater(new Runnable() {
