@@ -31,7 +31,6 @@ public class ProfessorDAO {
                 maiorID = res.getInt("id");
             }
         } catch (SQLException ex) {
-            // Log error if needed
         }
 
         return maiorID;
@@ -39,15 +38,13 @@ public class ProfessorDAO {
 
     public Connection getConexao() {
 
-        Connection connection = null;  //Instância da conexão
+        Connection connection = null;
 
         try {
 
-            // Carregamento do JDBC Driver
             String driver = "com.mysql.cj.jdbc.Driver";
             Class.forName(driver);
 
-            // Configurar a conexão
             String url = "jdbc:mysql://localhost:3306/db_escola?useTimezone=true&serverTimezone=UTC";
             String user = TelaLogin.userDB;
             String password = TelaLogin.passwordDB;
@@ -71,9 +68,8 @@ public class ProfessorDAO {
         }
     }
 
-    // Retorna a Lista de Professores (objetos)
     public ArrayList getMinhaLista() {
-        MinhaLista2.clear(); // Limpa o arrayList
+        MinhaLista2.clear();
 
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -102,7 +98,6 @@ public class ProfessorDAO {
         return MinhaLista2;
     }
 
-    // Cadastra novo professor
     public boolean InsertProfessorBD(Professor objeto) {
         String sql = "INSERT INTO tb_professores(id,nome,idade,campus,cpf,contato,titulo,salario) VALUES(?,?,?,?,?,?,?,?)";
 
@@ -128,7 +123,6 @@ public class ProfessorDAO {
         }
     }
 
-    // Deleta um professor específico pelo seu campo ID
     public boolean DeleteProfessorBD(int id) {
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -143,7 +137,6 @@ public class ProfessorDAO {
         }
     }
 
-    // Edita um professor específico pelo seu campo ID
     public boolean UpdateProfessorBD(Professor objeto) {
         String sql = "UPDATE tb_professores set nome = ? ,idade = ? ,campus = ? ,cpf = ? ,contato = ? ,titulo = ? ,salario = ? WHERE id = ?";
 
