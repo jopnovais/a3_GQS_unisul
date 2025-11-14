@@ -324,7 +324,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 1: Tentar atualizar um professor com ID menor ou igual a zero - deve lançar ValidacaoException")
+    @DisplayName("Caso 22: Tentar atualizar um professor com ID menor ou igual a zero - deve lançar ValidacaoException")
     void testAtualizar_ProfessorComIdMenorOuIgualAZero_DeveLancarValidacaoException() {
         professorValido.setId(0);
         
@@ -337,7 +337,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 2: Atualizar um professor válido com ID maior que zero - deve chamar repository.update()")
+    @DisplayName("Caso 23: Atualizar um professor válido com ID maior que zero - deve chamar repository.update()")
     void testAtualizar_ProfessorValidoComIdMaiorQueZero_DeveChamarRepositoryUpdate() throws ValidacaoException {
         professorValido.setId(1);
         Professor professorExistente = new Professor();
@@ -352,7 +352,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 3: Tentar atualizar um professor com CPF já cadastrado para outro professor (isNovo=false, existenteComMesmoCpf.getId() != professor.getId()) - deve lançar ValidacaoException")
+    @DisplayName("Caso 24: Tentar atualizar um professor com CPF já cadastrado para outro professor - deve lançar ValidacaoException")
     void testAtualizar_ProfessorComCpfJaCadastradoParaOutroProfessor_DeveLancarValidacaoException() {
         professorValido.setId(1);
         Professor professorExistente = new Professor();
@@ -370,7 +370,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 4: Atualizar um professor com o mesmo CPF (isNovo=false, existenteComMesmoCpf.getId() == professor.getId()) - deve chamar repository.update()")
+    @DisplayName("Caso 25: Atualizar um professor com o mesmo CPF - deve chamar repository.update()")
     void testAtualizar_ProfessorComMesmoCpfMesmoId_DeveChamarRepositoryUpdate() throws ValidacaoException {
         professorValido.setId(1);
         Professor professorExistente = new Professor();
@@ -385,7 +385,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 1: Excluir um professor existente - deve chamar repository.delete()")
+    @DisplayName("Caso 26: Excluir um professor existente - deve chamar repository.delete()")
     void testExcluir_ProfessorExistente_DeveChamarRepositoryDelete() {
         int id = 5;
         
@@ -395,7 +395,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 1: Buscar um professor por ID existente - deve chamar repository.findById() e retornar o resultado")
+    @DisplayName("Caso 27: Buscar um professor por ID existente - deve chamar repository.findById() e retornar o resultado")
     void testBuscarPorId_ProfessorExistente_DeveChamarRepositoryFindByIdERetornarResultado() {
         int id = 1;
         Professor professorMock = new Professor();
@@ -420,7 +420,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 1: Buscar um professor por CPF existente - deve chamar repository.findByCpf() e retornar o resultado")
+    @DisplayName("Caso 28: Buscar um professor por CPF existente - deve chamar repository.findByCpf() e retornar o resultado")
     void testBuscarPorCpf_ProfessorExistente_DeveChamarRepositoryFindByCpfERetornarResultado() {
         String cpf = "12345678901";
         Professor professorMock = new Professor();
@@ -445,7 +445,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 1: Listar todos os professores - deve chamar repository.findAll() e retornar o resultado")
+    @DisplayName("Caso 29: Listar todos os professores - deve chamar repository.findAll() e retornar o resultado")
     void testListarTodos_ProfessoresExistentes_DeveChamarRepositoryFindAllERetornarResultado() {
         Professor professor1 = new Professor();
         professor1.setId(1);
@@ -484,7 +484,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 1: Tentar calcular idade com data de nascimento nula - deve lançar ValidacaoException")
+    @DisplayName("Caso 30: Tentar calcular idade com data de nascimento nula - deve lançar ValidacaoException")
     void testCalcularIdade_DataNascimentoNula_DeveLancarValidacaoException() {
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             professorService.calcularIdade(null);
@@ -494,100 +494,33 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 2: Calcular idade quando o aniversário ainda não ocorreu no ano atual (hoje.before(dataNasc) == true) - deve subtrair 1")
+    @DisplayName("Caso 31: Calcular idade quando o aniversário ainda não ocorreu no ano atual - deve subtrair 1")
     void testCalcularIdade_AniversarioAindaNaoOcorreu_DeveSubtrairUm() {
-        // Criar uma data de nascimento onde o aniversário ainda não ocorreu este ano
-        // Usar uma data futura no mesmo ano (ex: 25 de dezembro)
-        Calendar calendar = Calendar.getInstance();
-        int anoAtual = calendar.get(Calendar.YEAR);
-        
-        // Data de nascimento: 25 de dezembro do ano passado
-        // Se hoje é antes de 25 de dezembro, o aniversário ainda não ocorreu
-        Calendar dataNasc = new GregorianCalendar();
-        dataNasc.set(anoAtual - 25, Calendar.DECEMBER, 25);
-        dataNasc.set(Calendar.HOUR_OF_DAY, 0);
-        dataNasc.set(Calendar.MINUTE, 0);
-        dataNasc.set(Calendar.SECOND, 0);
-        dataNasc.set(Calendar.MILLISECOND, 0);
-        
+        Calendar dataNasc = Calendar.getInstance();
+        dataNasc.add(Calendar.DAY_OF_YEAR, 1);
+        dataNasc.add(Calendar.YEAR, -25);
         java.util.Date dataNascimento = dataNasc.getTime();
         
         int idadeCalculada = professorService.calcularIdade(dataNascimento);
         
-        // Calcular idade esperada: ano atual - ano nascimento
-        int idadeEsperada = anoAtual - dataNasc.get(Calendar.YEAR);
-        
-        // Verificar se o aniversário já ocorreu este ano
-        Calendar dataNascComIdade = new GregorianCalendar();
-        dataNascComIdade.setTime(dataNascimento);
-        dataNascComIdade.set(Calendar.YEAR, anoAtual);
-        dataNascComIdade.set(Calendar.HOUR_OF_DAY, 0);
-        dataNascComIdade.set(Calendar.MINUTE, 0);
-        dataNascComIdade.set(Calendar.SECOND, 0);
-        dataNascComIdade.set(Calendar.MILLISECOND, 0);
-        
-        Calendar hoje = Calendar.getInstance();
-        hoje.set(Calendar.HOUR_OF_DAY, 0);
-        hoje.set(Calendar.MINUTE, 0);
-        hoje.set(Calendar.SECOND, 0);
-        hoje.set(Calendar.MILLISECOND, 0);
-        
-        // Se hoje é antes do aniversário deste ano, subtrai 1
-        if (hoje.before(dataNascComIdade)) {
-            idadeEsperada--;
-        }
-        
-        assertEquals(idadeEsperada, idadeCalculada);
+        assertEquals(24, idadeCalculada);
     }
 
     @Test
-    @DisplayName("Caso 3: Calcular idade quando o aniversário já ocorreu no ano atual (hoje.before(dataNasc) == false) - não deve subtrair")
+    @DisplayName("Caso 32: Calcular idade quando o aniversário já ocorreu no ano atual - não deve subtrair")
     void testCalcularIdade_AniversarioJaOcorreu_NaoDeveSubtrair() {
-        // Criar uma data de nascimento onde o aniversário já ocorreu este ano
-        // Usar uma data passada no mesmo ano (ex: 10 de janeiro)
-        Calendar calendar = Calendar.getInstance();
-        int anoAtual = calendar.get(Calendar.YEAR);
-        
-        // Data de nascimento: 10 de janeiro de 25 anos atrás
-        Calendar dataNasc = new GregorianCalendar();
-        dataNasc.set(anoAtual - 25, Calendar.JANUARY, 10);
-        dataNasc.set(Calendar.HOUR_OF_DAY, 0);
-        dataNasc.set(Calendar.MINUTE, 0);
-        dataNasc.set(Calendar.SECOND, 0);
-        dataNasc.set(Calendar.MILLISECOND, 0);
-        
+        Calendar dataNasc = Calendar.getInstance();
+        dataNasc.add(Calendar.DAY_OF_YEAR, -1);
+        dataNasc.add(Calendar.YEAR, -25);
         java.util.Date dataNascimento = dataNasc.getTime();
         
         int idadeCalculada = professorService.calcularIdade(dataNascimento);
         
-        // Calcular idade esperada: ano atual - ano nascimento
-        int idadeEsperada = anoAtual - dataNasc.get(Calendar.YEAR);
-        
-        // Verificar se o aniversário já ocorreu este ano
-        Calendar dataNascComIdade = new GregorianCalendar();
-        dataNascComIdade.setTime(dataNascimento);
-        dataNascComIdade.set(Calendar.YEAR, anoAtual);
-        dataNascComIdade.set(Calendar.HOUR_OF_DAY, 0);
-        dataNascComIdade.set(Calendar.MINUTE, 0);
-        dataNascComIdade.set(Calendar.SECOND, 0);
-        dataNascComIdade.set(Calendar.MILLISECOND, 0);
-        
-        Calendar hoje = Calendar.getInstance();
-        hoje.set(Calendar.HOUR_OF_DAY, 0);
-        hoje.set(Calendar.MINUTE, 0);
-        hoje.set(Calendar.SECOND, 0);
-        hoje.set(Calendar.MILLISECOND, 0);
-        
-        // Se hoje é depois ou igual ao aniversário deste ano, não subtrai
-        if (hoje.before(dataNascComIdade)) {
-            idadeEsperada--;
-        }
-        
-        assertEquals(idadeEsperada, idadeCalculada);
+        assertEquals(25, idadeCalculada);
     }
 
     @Test
-    @DisplayName("Caso 1: Validar formatado com input nulo - deve retornar string vazia")
+    @DisplayName("Caso 33: Validar formatado com input nulo - deve retornar string vazia")
     void testValidarFormatado_InputNulo_DeveRetornarStringVazia() {
         String resultado = professorService.validarFormatado(null);
         
@@ -595,7 +528,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 2: Validar formatado com input contendo apenas caracteres numéricos - deve retornar a string com todos os caracteres numéricos preservados")
+    @DisplayName("Caso 34: Validar formatado com input contendo apenas caracteres numéricos - deve retornar a string preservada")
     void testValidarFormatado_InputApenasNumericos_DeveRetornarTodosOsCaracteres() {
         String input = "12345678901";
         
@@ -605,7 +538,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 3: Validar formatado com input contendo caracteres não numéricos - deve retornar apenas os caracteres numéricos, removendo todos os não numéricos")
+    @DisplayName("Caso 35: Validar formatado com input contendo apenas caracteres não numéricos - deve retornar string vazia")
     void testValidarFormatado_InputApenasNaoNumericos_DeveRetornarStringVazia() {
         String input = "abcdefghij";
         
@@ -615,7 +548,7 @@ class ProfessorServiceImplTest {
     }
 
     @Test
-    @DisplayName("Caso 4: Validar formatado com input contendo caracteres numéricos e não numéricos misturados - deve retornar apenas os caracteres numéricos, removendo todos os não numéricos")
+    @DisplayName("Caso 36: Validar formatado com input contendo caracteres numéricos e não numéricos misturados - deve retornar apenas os numéricos")
     void testValidarFormatado_InputMisturado_DeveRetornarApenasNumericos() {
         String input = "123.456.789-01";
         
