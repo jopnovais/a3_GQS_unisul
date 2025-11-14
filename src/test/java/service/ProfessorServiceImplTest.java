@@ -11,6 +11,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import repository.ProfessorRepository;
 import service.exception.ValidacaoException;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -439,6 +442,148 @@ class ProfessorServiceImplTest {
         assertEquals(professorMock, resultado);
         assertEquals(cpf, resultado.getCpf());
         assertEquals("Professor Teste", resultado.getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 1: Listar todos os professores - deve chamar repository.findAll() e retornar o resultado")
+    void testListarTodos_ProfessoresExistentes_DeveChamarRepositoryFindAllERetornarResultado() {
+        Professor professor1 = new Professor();
+        professor1.setId(1);
+        professor1.setNome("Professor 1");
+        professor1.setIdade(35);
+        professor1.setCampus("Tubarão");
+        professor1.setCpf("12345678901");
+        professor1.setContato("47912345678");
+        professor1.setTitulo("Doutor");
+        professor1.setSalario(5000.0);
+        
+        Professor professor2 = new Professor();
+        professor2.setId(2);
+        professor2.setNome("Professor 2");
+        professor2.setIdade(40);
+        professor2.setCampus("Florianópolis");
+        professor2.setCpf("98765432109");
+        professor2.setContato("47987654321");
+        professor2.setTitulo("Mestre");
+        professor2.setSalario(6000.0);
+        
+        java.util.List<Professor> professoresMock = new java.util.ArrayList<>();
+        professoresMock.add(professor1);
+        professoresMock.add(professor2);
+        
+        when(professorRepository.findAll()).thenReturn(professoresMock);
+        
+        java.util.List<Professor> resultado = professorService.listarTodos();
+        
+        verify(professorRepository, times(1)).findAll();
+        assertNotNull(resultado);
+        assertEquals(professoresMock, resultado);
+        assertEquals(2, resultado.size());
+        assertEquals("Professor 1", resultado.get(0).getNome());
+        assertEquals("Professor 2", resultado.get(1).getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 1: Tentar calcular idade com data de nascimento nula - deve lançar ValidacaoException")
+    void testCalcularIdade_DataNascimentoNula_DeveLancarValidacaoException() {
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            professorService.calcularIdade(null);
+        });
+        
+        assertEquals("Data de nascimento não pode ser nula.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Caso 2: Calcular idade quando o aniversário ainda não ocorreu no ano atual (hoje.before(dataNasc) == true) - deve subtrair 1")
+    void testCalcularIdade_AniversarioAindaNaoOcorreu_DeveSubtrairUm() {
+        // Criar uma data de nascimento onde o aniversário ainda não ocorreu este ano
+        // Usar uma data futura no mesmo ano (ex: 25 de dezembro)
+        Calendar calendar = Calendar.getInstance();
+        int anoAtual = calendar.get(Calendar.YEAR);
+        
+        // Data de nascimento: 25 de dezembro do ano passado
+        // Se hoje é antes de 25 de dezembro, o aniversário ainda não ocorreu
+        Calendar dataNasc = new GregorianCalendar();
+        dataNasc.set(anoAtual - 25, Calendar.DECEMBER, 25);
+        dataNasc.set(Calendar.HOUR_OF_DAY, 0);
+        dataNasc.set(Calendar.MINUTE, 0);
+        dataNasc.set(Calendar.SECOND, 0);
+        dataNasc.set(Calendar.MILLISECOND, 0);
+        
+        java.util.Date dataNascimento = dataNasc.getTime();
+        
+        int idadeCalculada = professorService.calcularIdade(dataNascimento);
+        
+        // Calcular idade esperada: ano atual - ano nascimento
+        int idadeEsperada = anoAtual - dataNasc.get(Calendar.YEAR);
+        
+        // Verificar se o aniversário já ocorreu este ano
+        Calendar dataNascComIdade = new GregorianCalendar();
+        dataNascComIdade.setTime(dataNascimento);
+        dataNascComIdade.set(Calendar.YEAR, anoAtual);
+        dataNascComIdade.set(Calendar.HOUR_OF_DAY, 0);
+        dataNascComIdade.set(Calendar.MINUTE, 0);
+        dataNascComIdade.set(Calendar.SECOND, 0);
+        dataNascComIdade.set(Calendar.MILLISECOND, 0);
+        
+        Calendar hoje = Calendar.getInstance();
+        hoje.set(Calendar.HOUR_OF_DAY, 0);
+        hoje.set(Calendar.MINUTE, 0);
+        hoje.set(Calendar.SECOND, 0);
+        hoje.set(Calendar.MILLISECOND, 0);
+        
+        // Se hoje é antes do aniversário deste ano, subtrai 1
+        if (hoje.before(dataNascComIdade)) {
+            idadeEsperada--;
+        }
+        
+        assertEquals(idadeEsperada, idadeCalculada);
+    }
+
+    @Test
+    @DisplayName("Caso 3: Calcular idade quando o aniversário já ocorreu no ano atual (hoje.before(dataNasc) == false) - não deve subtrair")
+    void testCalcularIdade_AniversarioJaOcorreu_NaoDeveSubtrair() {
+        // Criar uma data de nascimento onde o aniversário já ocorreu este ano
+        // Usar uma data passada no mesmo ano (ex: 10 de janeiro)
+        Calendar calendar = Calendar.getInstance();
+        int anoAtual = calendar.get(Calendar.YEAR);
+        
+        // Data de nascimento: 10 de janeiro de 25 anos atrás
+        Calendar dataNasc = new GregorianCalendar();
+        dataNasc.set(anoAtual - 25, Calendar.JANUARY, 10);
+        dataNasc.set(Calendar.HOUR_OF_DAY, 0);
+        dataNasc.set(Calendar.MINUTE, 0);
+        dataNasc.set(Calendar.SECOND, 0);
+        dataNasc.set(Calendar.MILLISECOND, 0);
+        
+        java.util.Date dataNascimento = dataNasc.getTime();
+        
+        int idadeCalculada = professorService.calcularIdade(dataNascimento);
+        
+        // Calcular idade esperada: ano atual - ano nascimento
+        int idadeEsperada = anoAtual - dataNasc.get(Calendar.YEAR);
+        
+        // Verificar se o aniversário já ocorreu este ano
+        Calendar dataNascComIdade = new GregorianCalendar();
+        dataNascComIdade.setTime(dataNascimento);
+        dataNascComIdade.set(Calendar.YEAR, anoAtual);
+        dataNascComIdade.set(Calendar.HOUR_OF_DAY, 0);
+        dataNascComIdade.set(Calendar.MINUTE, 0);
+        dataNascComIdade.set(Calendar.SECOND, 0);
+        dataNascComIdade.set(Calendar.MILLISECOND, 0);
+        
+        Calendar hoje = Calendar.getInstance();
+        hoje.set(Calendar.HOUR_OF_DAY, 0);
+        hoje.set(Calendar.MINUTE, 0);
+        hoje.set(Calendar.SECOND, 0);
+        hoje.set(Calendar.MILLISECOND, 0);
+        
+        // Se hoje é depois ou igual ao aniversário deste ano, não subtrai
+        if (hoje.before(dataNascComIdade)) {
+            idadeEsperada--;
+        }
+        
+        assertEquals(idadeEsperada, idadeCalculada);
     }
 }
 
