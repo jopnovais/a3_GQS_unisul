@@ -189,5 +189,148 @@ class AlunoServiceImplTest {
         assertEquals(1, resultado.getId());
         assertEquals("Aluno Teste", resultado.getNome());
     }
+        @Test
+    @DisplayName("Caso 13: Tentar salvar um aluno com fase menor que 1 - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarFaseMenorQueUm() {
+        alunoValido.setFase(0); // fase inválida
+
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+
+        assertEquals("Fase deve estar entre 1 e 10.", exception.getMessage());
+        verify(alunoRepository, never()).save(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Caso 14: Tentar salvar um aluno com fase maior que 10 - deve lançar ValidacaoException")
+    void testSalvarNaoDeveSalvarFaseMaiorQueDez() {
+        alunoValido.setFase(11); // fase inválida
+
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+
+        assertEquals("Fase deve estar entre 1 e 10.", exception.getMessage());
+        verify(alunoRepository, never()).save(any(Aluno.class));
+    }
+ 
+    @Test
+    @DisplayName("Atualizar - Caso 1: Tentar atualizar um aluno com ID menor ou igual a zero - deve lançar ValidacaoException")
+    void testAtualizar_AlunoComIdMenorOuIgualZero_DeveLancarValidacaoException() {
+        alunoValido.setId(0); 
+
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+
+        assertEquals("ID do aluno é obrigatório para atualização.", exception.getMessage());
+        verify(alunoRepository, never()).update(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Atualizar - Caso 2: Atualizar um aluno válido com ID maior que zero - deve chamar repository.update()")
+    void testAtualizar_AlunoValido_DeveChamarRepositoryUpdate() throws ValidacaoException {
+        alunoValido.setId(1); 
+
+        alunoService.atualizar(alunoValido);
+
+        verify(alunoRepository, times(1)).update(alunoValido);
+    }
+
+   @Test
+    @DisplayName("Atualizar - Caso 3: Tentar atualizar um aluno nulo - comportamento atual: lança NullPointerException")
+    void testAtualizar_AlunoNulo_DeveLancarNullPointerException() {
+    assertThrows(NullPointerException.class, () -> {
+        alunoService.atualizar(null);
+    });
+
+    verify(alunoRepository, never()).update(any(Aluno.class));
+    }
+
+
+    @Test
+    @DisplayName("Atualizar - Caso 4: Tentar atualizar um aluno com nome inválido (nulo, vazio ou com menos de 2 caracteres) - deve lançar ValidacaoException")
+    void testAtualizar_AlunoComNomeInvalido_DeveLancarValidacaoException() {
+        alunoValido.setId(1);
+
+    
+        alunoValido.setNome(null);
+        assertThrows(ValidacaoException.class, () -> alunoService.atualizar(alunoValido));
+
+     
+        alunoValido.setNome("");
+        assertThrows(ValidacaoException.class, () -> alunoService.atualizar(alunoValido));
+
+    
+        alunoValido.setNome("A");
+        assertThrows(ValidacaoException.class, () -> alunoService.atualizar(alunoValido));
+
+        verify(alunoRepository, never()).update(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Atualizar - Caso 5: Tentar atualizar um aluno com idade menor que 11 anos - deve lançar ValidacaoException")
+    void testAtualizar_AlunoComIdadeMenorQueOnze_DeveLancarValidacaoException() {
+        alunoValido.setId(1);
+        alunoValido.setIdade(10);
+
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+
+        assertEquals("Idade inválida. Deve ser maior ou igual a 11 anos.", exception.getMessage());
+        verify(alunoRepository, never()).update(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Atualizar - Caso 6: Tentar atualizar um aluno com curso inválido (nulo, vazio ou igual a '-') - deve lançar ValidacaoException")
+    void testAtualizar_AlunoComCursoInvalido_DeveLancarValidacaoException() {
+        alunoValido.setId(1); // ID válido
+
+
+        alunoValido.setCurso(null);
+        ValidacaoException ex1 = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+        assertEquals("Curso é obrigatório.", ex1.getMessage());
+
+
+        alunoValido.setCurso("");
+        ValidacaoException ex2 = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+        assertEquals("Curso é obrigatório.", ex2.getMessage());
+
+
+        alunoValido.setCurso("-");
+        ValidacaoException ex3 = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+        assertEquals("Curso é obrigatório.", ex3.getMessage());
+
+        verify(alunoRepository, never()).update(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Atualizar - Caso 7: Tentar atualizar um aluno com fase inválida (menor que 1 ou maior que 10) - deve lançar ValidacaoException")
+    void testAtualizar_AlunoComFaseInvalida_DeveLancarValidacaoException() {
+        alunoValido.setId(1); // ID válido
+
+        alunoValido.setFase(0);
+        ValidacaoException ex1 = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+        assertEquals("Fase deve estar entre 1 e 10.", ex1.getMessage());
+
+        alunoValido.setFase(11);
+        ValidacaoException ex2 = assertThrows(ValidacaoException.class, () -> {
+            alunoService.atualizar(alunoValido);
+        });
+        assertEquals("Fase deve estar entre 1 e 10.", ex2.getMessage());
+
+        verify(alunoRepository, never()).update(any(Aluno.class));
+    }
+
 }
 
