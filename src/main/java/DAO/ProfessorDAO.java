@@ -1,4 +1,4 @@
-package dao;
+package DAO;
 
 import model.Professor;
 import view.TelaLogin;
