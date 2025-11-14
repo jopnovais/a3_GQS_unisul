@@ -23,10 +23,10 @@ public class AlunoServiceImpl implements AlunoService {
 
     @Override
     public void atualizar(Aluno aluno) throws ValidacaoException {
+        validarAluno(aluno);
         if (aluno.getId() <= 0) {
             throw new ValidacaoException("ID do aluno é obrigatório para atualização.");
         }
-        validarAluno(aluno);
         alunoRepository.update(aluno);
     }
 
