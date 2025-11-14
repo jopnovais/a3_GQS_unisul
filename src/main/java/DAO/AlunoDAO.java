@@ -30,28 +30,23 @@ public class AlunoDAO {
                 maiorID = res.getInt("id");
             }
         } catch (SQLException ex) {
-            // Log error if needed
         }
         return maiorID;
     }
 
     public Connection getConexao() {
 
-        Connection connection = null;  //instância da conexão
+        Connection connection = null;
 
         try {
-            // Carregamento do JDBC Driver
             String driver = "com.mysql.cj.jdbc.Driver";
             Class.forName(driver);
 
-            // Configurar a conexão
             String url = "jdbc:mysql://localhost:3306/db_escola?useTimezone=true&serverTimezone=UTC";
             String user = TelaLogin.userDB;
             String password = TelaLogin.passwordDB;
 
             connection = DriverManager.getConnection(url, user, password);
-
-            // Verifica se a conexão é válida
             if (connection.isValid(1)) {
                 System.out.println("Status: Conectado!");
             } else {
@@ -70,9 +65,8 @@ public class AlunoDAO {
         }
     }
 
-    // Retorna a Lista de Alunos(objetos)
     public ArrayList getMinhaLista() {
-        MinhaLista.clear(); // Limpa o arrayList
+        MinhaLista.clear();
 
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -97,7 +91,6 @@ public class AlunoDAO {
         return MinhaLista;
     }
 
-    // Cadastra novo aluno
     public boolean InsertAlunoBD(Aluno objeto) {
         String sql = "INSERT INTO tb_alunos(id,nome,idade,curso,fase) VALUES(?,?,?,?,?)";
 
@@ -120,7 +113,6 @@ public class AlunoDAO {
         }
     }
 
-    // Deleta um aluno específico pelo seu campo ID
     public boolean DeleteAlunoBD(int id) {
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -135,7 +127,6 @@ public class AlunoDAO {
         }
     }
 
-    // Edita um aluno específico pelo seu campo ID
     public boolean UpdateAlunoBD(Aluno objeto) {
         String sql = "UPDATE tb_alunos set nome = ? ,idade = ? ,curso = ? ,fase = ? WHERE id = ?";
 
