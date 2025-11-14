@@ -8,7 +8,6 @@ import repository.ProfessorRepositoryImpl;
 
 public class Professor extends Pessoa {
 
-    // Atributos
     private String campus;
     private String cpf;
     private String contato;
@@ -40,7 +39,6 @@ public class Professor extends Pessoa {
         this.repository = new ProfessorRepositoryImpl();
     }
 
-    // Métodos GET e SET
     public String getCampus() {
         return campus;
     }
@@ -81,7 +79,6 @@ public class Professor extends Pessoa {
         this.salario = salario;
     }
 
-    // Override necessário para poder retornar os dados de Pessoa no toString para professor.
     @Override
     public String toString() {
         return "\n ID: " + this.getId()

@@ -2,23 +2,19 @@ package model;
 
 public abstract class Pessoa {
 
-    // Atributos
     private int id;
     private String nome;
     private int idade;
 
-    // M�todo Construtor de Objeto Vazio
     public Pessoa() {
     }
 
-    // M�todo Construtor de Objeto, inserindo dados
     public Pessoa(int id, String nome, int idade) {
         this.id = id;
         this.nome = nome;
         this.idade = idade;
     }
 
-    // M�todos GET e SET
     public int getId() {
         return id;
     }
