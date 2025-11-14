@@ -23,10 +23,10 @@ public class ProfessorServiceImpl implements ProfessorService {
     
     @Override
     public void atualizar(Professor professor) throws ValidacaoException {
+        validarProfessor(professor, false);
         if (professor.getId() <= 0) {
             throw new ValidacaoException("ID do professor é obrigatório para atualização.");
         }
-        validarProfessor(professor, false);
         professorRepository.update(professor);
     }
     

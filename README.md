@@ -146,13 +146,16 @@ Possíveis causas e soluções:
    - Execute `mvn clean install` para baixar as dependências
    - Verifique se a dependência `sqlite-jdbc` está no `pom.xml`
 
-## Executando os Testes
+## 🧪 Executando os Testes
 
-O projeto possui testes de integração para validar o funcionamento da camada de repositório (Repository) com o banco de dados SQLite.
+O projeto possui dois tipos de testes:
+
+1. **Testes Unitários** (Mockito): Testam a camada de serviço isoladamente, usando mocks dos repositórios
+2. **Testes de Integração**: Testam a camada de repositório com o banco de dados SQLite
 
 ### Executar Todos os Testes
 
-Para executar todos os testes do projeto:
+Para executar todos os testes do projeto (unitários + integração):
 
 ```bash
 mvn test
@@ -160,13 +163,29 @@ mvn test
 
 ### Executar Testes Específicos
 
-Para executar apenas os testes de `AlunoRepositoryImpl`:
+#### Testes Unitários
+
+Para executar apenas os testes unitários de `AlunoServiceImpl`:
+
+```bash
+mvn test -Dtest=AlunoServiceImplTest
+```
+
+Para executar apenas os testes unitários de `ProfessorServiceImpl`:
+
+```bash
+mvn test -Dtest=ProfessorServiceImplTest
+```
+
+#### Testes de Integração
+
+Para executar apenas os testes de integração de `AlunoRepositoryImpl`:
 
 ```bash
 mvn test -Dtest=AlunoRepositoryImplTest
 ```
 
-Para executar apenas os testes de `ProfessorRepositoryImpl`:
+Para executar apenas os testes de integração de `ProfessorRepositoryImpl`:
 
 ```bash
 mvn test -Dtest=ProfessorRepositoryImplTest
@@ -199,51 +218,114 @@ xdg-open target/site/jacoco/index.html
 open target/site/jacoco/index.html
 ```
 
-### Casos de Teste Implementados
+### 📊 Casos de Teste Implementados
 
-#### Testes de AlunoRepositoryImpl (9 casos)
+#### Testes Unitários - AlunoServiceImpl (35 casos)
+
+Testam a lógica de negócio do serviço de alunos usando Mockito para isolar dependências:
+
+| Categoria | Método | Quantidade | Descrição |
+|-----------|--------|------------|-----------|
+| Validações | `salvar()` | 10 | Validações de nome, idade, curso, fase, etc. |
+| Validações | `atualizar()` | 11 | Validações de ID, nome, idade, curso, fase, etc. |
+| Operações | `excluir()` | 1 | Exclusão de aluno |
+| Operações | `buscarPorId()` | 1 | Busca por ID |
+| Operações | `listarTodos()` | 1 | Listagem de todos os alunos |
+| Utilitários | `calcularIdade()` | 3 | Cálculo de idade com diferentes cenários |
+
+**Principais cenários testados:**
+- Validação de campos obrigatórios (nome, curso, fase)
+- Validação de regras de negócio (idade mínima, fase entre 1-10)
+- Validação de formato de nome (deve conter letras)
+- Cálculo correto de idade considerando aniversário
+- Verificação de chamadas ao repositório
+
+#### Testes Unitários - ProfessorServiceImpl (36 casos)
+
+Testam a lógica de negócio do serviço de professores usando Mockito para isolar dependências:
+
+| Categoria | Método | Quantidade | Descrição |
+|-----------|--------|------------|-----------|
+| Validações | `salvar()` | 21 | Validações de nome, campus, CPF, contato, idade, salário, título |
+| Validações | `atualizar()` | 4 | Validações de ID, CPF duplicado, etc. |
+| Operações | `excluir()` | 1 | Exclusão de professor |
+| Operações | `buscarPorId()` | 1 | Busca por ID |
+| Operações | `buscarPorCpf()` | 1 | Busca por CPF |
+| Operações | `listarTodos()` | 1 | Listagem de todos os professores |
+| Utilitários | `calcularIdade()` | 3 | Cálculo de idade com diferentes cenários |
+| Utilitários | `validarFormatado()` | 4 | Validação e formatação de strings (remover caracteres não numéricos) |
+
+**Principais cenários testados:**
+- Validação de campos obrigatórios (nome, campus, CPF, contato, título)
+- Validação de formato de CPF e contato (11 dígitos numéricos)
+- Validação de salário (mínimo 4 dígitos, maior que zero)
+- Validação de CPF duplicado no cadastro e atualização
+- Cálculo correto de idade considerando aniversário
+- Formatação de strings (remover caracteres não numéricos)
+- Verificação de chamadas ao repositório
+
+#### Testes de Integração - AlunoRepositoryImpl (9 casos)
 
 | # | Método | Descrição | Status |
 |---|--------|-----------|--------|
-| 1 | `save()` | Salvar aluno válido - deve gerar ID | OK |
-| 2 | `save()` | Salvar aluno com nome nulo - deve salvar com null | OK |
-| 3 | `save()` | Salvar dois alunos diferentes - deve salvar ambos | OK |
-| 4 | `findById()` | Buscar por ID existente - deve retornar aluno | OK |
-| 5 | `findById()` | Buscar por ID inexistente - deve retornar null | OK |
-| 6 | `findAll()` | Listar quando banco vazio - deve retornar lista vazia | OK |
-| 7 | `findAll()` | Listar após salvar 3 alunos - deve retornar 3 alunos | OK |
-| 8 | `update()` | Atualizar nome do aluno - deve atualizar corretamente | OK |
-| 9 | `delete()` | Excluir aluno - deve remover do banco | OK |
+| 1 | `save()` | Salvar aluno válido - deve gerar ID | ✅ |
+| 2 | `save()` | Salvar aluno com nome nulo - deve salvar com null | ✅ |
+| 3 | `save()` | Salvar dois alunos diferentes - deve salvar ambos | ✅ |
+| 4 | `findById()` | Buscar por ID existente - deve retornar aluno | ✅ |
+| 5 | `findById()` | Buscar por ID inexistente - deve retornar null | ✅ |
+| 6 | `findAll()` | Listar quando banco vazio - deve retornar lista vazia | ✅ |
+| 7 | `findAll()` | Listar após salvar 3 alunos - deve retornar 3 alunos | ✅ |
+| 8 | `update()` | Atualizar nome do aluno - deve atualizar corretamente | ✅ |
+| 9 | `delete()` | Excluir aluno - deve remover do banco | ✅ |
 
-#### Testes de ProfessorRepositoryImpl (8 casos)
+#### Testes de Integração - ProfessorRepositoryImpl (11 casos)
 
 | # | Método | Descrição | Status |
 |---|--------|-----------|--------|
-| 1 | `save()` | Salvar professor válido - deve gerar ID | OK |
-| 2 | `save()` | Salvar professor com campo nulo - deve salvar com null | OK |
-| 3 | `findById()` | Buscar por ID existente - deve retornar professor | OK |
-| 4 | `findById()` | Buscar por ID inexistente - deve retornar null | OK |
-| 5 | `findAll()` | Listar quando banco vazio - deve retornar lista vazia | OK |
-| 6 | `findAll()` | Listar após salvar 2 professores - deve retornar 2 professores | OK |
-| 7 | `update()` | Atualizar contato do professor - deve atualizar corretamente | OK |
-| 8 | `delete()` | Excluir professor - deve remover do banco | OK |
+| 1 | `save()` | Salvar professor válido - deve gerar ID | ✅ |
+| 2 | `save()` | Salvar professor com campo nulo - deve salvar com null | ✅ |
+| 3 | `findById()` | Buscar por ID existente - deve retornar professor | ✅ |
+| 4 | `findById()` | Buscar por ID inexistente - deve retornar null | ✅ |
+| 4.5 | `findByCpf()` | Buscar por CPF existente - deve retornar professor | ✅ |
+| 4.6 | `findByCpf()` | Buscar por CPF inexistente - deve retornar null | ✅ |
+| 5 | `findAll()` | Listar quando banco vazio - deve retornar lista vazia | ✅ |
+| 6 | `findAll()` | Listar após salvar 2 professores - deve retornar 2 professores | ✅ |
+| 6.5 | `update()` | Atualizar com ID inexistente - deve retornar false | ✅ |
+| 6.6 | `delete()` | Excluir com ID inexistente - deve retornar false | ✅ |
+| 7 | `update()` | Atualizar contato do professor - deve atualizar corretamente | ✅ |
+| 8 | `delete()` | Excluir professor - deve remover do banco | ✅ |
+| 9 | `getMaxId()` | getMaxId quando tabela vazia - deve retornar 0 | ✅ |
+| 10 | `getMaxId()` | getMaxId após salvar múltiplos - deve retornar maior ID | ✅ |
+| 11 | `findAll()` | findAll com múltiplos professores - deve retornar todos | ✅ |
 
-Total: 17 testes de integração
+### 📈 Resumo de Cobertura
 
-### Estrutura dos Testes
+- **Total de Testes Unitários**: 71 casos (35 Aluno + 36 Professor)
+- **Total de Testes de Integração**: 20 casos (9 Aluno + 11 Professor)
+- **Total Geral**: 91 casos de teste
+- **Cobertura Atual**: ~52.6% (em evolução para 85%)
 
-Os testes estão localizados em:
+### 📁 Estrutura dos Testes
+
+Os testes estão organizados da seguinte forma:
+
 ```
-src/test/java/repository/
-├── AlunoRepositoryImplTest.java
-└── ProfessorRepositoryImplTest.java
+src/test/java/
+├── service/                          # Testes Unitários (Mockito)
+│   ├── AlunoServiceImplTest.java     # 35 casos de teste
+│   └── ProfessorServiceImplTest.java # 36 casos de teste
+└── repository/                       # Testes de Integração
+    ├── AlunoRepositoryImplTest.java  # 9 casos de teste
+    └── ProfessorRepositoryImplTest.java # 11 casos de teste
 ```
 
-### Tecnologias de Teste
+### 🛠️ Tecnologias de Teste
 
-- JUnit 5: (Jupiter): Framework de testes
-- JaCoCo: Análise de cobertura de código
-- SQLite: Banco de dados em memória para testes de integração
+- **JUnit 5 (Jupiter)**: Framework de testes para Java
+- **Mockito**: Framework de mocking para testes unitários
+- **JaCoCo**: Análise de cobertura de código
+- **SQLite**: Banco de dados em memória para testes de integração
+- **Maven Surefire Plugin**: Execução de testes durante o build
 
 # Tecnologias Utilizadas
 
