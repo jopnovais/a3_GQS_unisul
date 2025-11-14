@@ -380,5 +380,65 @@ class ProfessorServiceImplTest {
         
         verify(professorRepository, times(1)).update(professorValido);
     }
+
+    @Test
+    @DisplayName("Caso 1: Excluir um professor existente - deve chamar repository.delete()")
+    void testExcluir_ProfessorExistente_DeveChamarRepositoryDelete() {
+        int id = 5;
+        
+        professorService.excluir(id);
+        
+        verify(professorRepository, times(1)).delete(id);
+    }
+
+    @Test
+    @DisplayName("Caso 1: Buscar um professor por ID existente - deve chamar repository.findById() e retornar o resultado")
+    void testBuscarPorId_ProfessorExistente_DeveChamarRepositoryFindByIdERetornarResultado() {
+        int id = 1;
+        Professor professorMock = new Professor();
+        professorMock.setId(id);
+        professorMock.setNome("Professor Teste");
+        professorMock.setIdade(35);
+        professorMock.setCampus("Tubarão");
+        professorMock.setCpf("12345678901");
+        professorMock.setContato("47912345678");
+        professorMock.setTitulo("Doutor");
+        professorMock.setSalario(5000.0);
+        
+        when(professorRepository.findById(id)).thenReturn(professorMock);
+        
+        Professor resultado = professorService.buscarPorId(id);
+        
+        verify(professorRepository, times(1)).findById(id);
+        assertNotNull(resultado);
+        assertEquals(professorMock, resultado);
+        assertEquals(id, resultado.getId());
+        assertEquals("Professor Teste", resultado.getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 1: Buscar um professor por CPF existente - deve chamar repository.findByCpf() e retornar o resultado")
+    void testBuscarPorCpf_ProfessorExistente_DeveChamarRepositoryFindByCpfERetornarResultado() {
+        String cpf = "12345678901";
+        Professor professorMock = new Professor();
+        professorMock.setId(1);
+        professorMock.setNome("Professor Teste");
+        professorMock.setIdade(35);
+        professorMock.setCampus("Tubarão");
+        professorMock.setCpf(cpf);
+        professorMock.setContato("47912345678");
+        professorMock.setTitulo("Doutor");
+        professorMock.setSalario(5000.0);
+        
+        when(professorRepository.findByCpf(cpf)).thenReturn(professorMock);
+        
+        Professor resultado = professorService.buscarPorCpf(cpf);
+        
+        verify(professorRepository, times(1)).findByCpf(cpf);
+        assertNotNull(resultado);
+        assertEquals(professorMock, resultado);
+        assertEquals(cpf, resultado.getCpf());
+        assertEquals("Professor Teste", resultado.getNome());
+    }
 }
 
