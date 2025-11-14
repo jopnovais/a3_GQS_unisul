@@ -585,5 +585,43 @@ class ProfessorServiceImplTest {
         
         assertEquals(idadeEsperada, idadeCalculada);
     }
+
+    @Test
+    @DisplayName("Caso 1: Validar formatado com input nulo - deve retornar string vazia")
+    void testValidarFormatado_InputNulo_DeveRetornarStringVazia() {
+        String resultado = professorService.validarFormatado(null);
+        
+        assertEquals("", resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 2: Validar formatado com input contendo apenas caracteres numéricos - deve retornar a string com todos os caracteres numéricos preservados")
+    void testValidarFormatado_InputApenasNumericos_DeveRetornarTodosOsCaracteres() {
+        String input = "12345678901";
+        
+        String resultado = professorService.validarFormatado(input);
+        
+        assertEquals("12345678901", resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 3: Validar formatado com input contendo caracteres não numéricos - deve retornar apenas os caracteres numéricos, removendo todos os não numéricos")
+    void testValidarFormatado_InputApenasNaoNumericos_DeveRetornarStringVazia() {
+        String input = "abcdefghij";
+        
+        String resultado = professorService.validarFormatado(input);
+        
+        assertEquals("", resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 4: Validar formatado com input contendo caracteres numéricos e não numéricos misturados - deve retornar apenas os caracteres numéricos, removendo todos os não numéricos")
+    void testValidarFormatado_InputMisturado_DeveRetornarApenasNumericos() {
+        String input = "123.456.789-01";
+        
+        String resultado = professorService.validarFormatado(input);
+        
+        assertEquals("12345678901", resultado);
+    }
 }
 
