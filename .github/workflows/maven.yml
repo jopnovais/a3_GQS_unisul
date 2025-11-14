@@ -29,10 +29,10 @@ jobs:
         run: mvn -B clean compile
 
   #----------------------------------------------
-  # 2. AMBIENTE HML: Testes com múltiplas versões Java
+  # 2. AMBIENTE HMG: Testes com múltiplas versões Java
   #----------------------------------------------
-  build-hml:
-    name: 2. Test (HML) - Java ${{ matrix.java-version }}
+  build-hmg:
+    name: 2. Test (HMG) - Java ${{ matrix.java-version }}
     runs-on: ubuntu-latest
     needs: build-dev
     strategy:
@@ -155,7 +155,7 @@ jobs:
   build-prd:
     name: 4. Package (PRD)
     runs-on: ubuntu-latest
-    needs: build-hml
+    needs: build-hmg
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
