@@ -10,6 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import repository.AlunoRepository;
 import service.exception.ValidacaoException;
+import java.util.Date;
+import java.util.Calendar;
+import java.util.List; // Import adicionado
+import java.util.Arrays; // Import adicionado
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,7 +44,7 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 1: Salvar um aluno perfeitamente válido - deve chamar repository.save()")
     void testSalvar_AlunoValido_DeveChamarRepositorySave() throws ValidacaoException {
         alunoService.salvar(alunoValido);
-        
+
         verify(alunoRepository, times(1)).save(alunoValido);
     }
 
@@ -48,11 +52,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 2: Tentar salvar um aluno com nome nulo - deve lançar ValidacaoException")
     void testSalvar_AlunoComNomeNulo_DeveLancarValidacaoException() {
         alunoValido.setNome(null);
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Nome é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any(Aluno.class));
     }
@@ -61,11 +65,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 3: Tentar salvar um aluno com nome vazio - deve lançar ValidacaoException")
     void testSalvar_AlunoComNomeVazio_DeveLancarValidacaoException() {
         alunoValido.setNome("");
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Nome é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any(Aluno.class));
     }
@@ -76,7 +80,7 @@ class AlunoServiceImplTest {
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(null);
         });
-        
+
         assertEquals("Aluno não pode ser nulo.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -85,11 +89,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 5: Tentar salvar um aluno com nome contendo apenas espaços - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarNomeComEspacos() {
         alunoValido.setNome("   ");
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Nome é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -98,11 +102,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 6: Tentar salvar um aluno com nome de 1 caractere - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarNomeComUmCaractere() {
         alunoValido.setNome("A");
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Nome deve conter ao menos 2 caracteres.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -111,11 +115,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 7: Tentar salvar um aluno com idade menor que 11 - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarIdadeMenorQueOnze() {
         alunoValido.setIdade(10);
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Idade inválida. Deve ser maior ou igual a 11 anos.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -124,11 +128,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 8: Tentar salvar um aluno com curso nulo - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarCursoNulo() {
         alunoValido.setCurso(null);
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Curso é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -137,11 +141,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 9: Tentar salvar um aluno com curso vazio - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarCursoVazio() {
         alunoValido.setCurso("");
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Curso é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -150,11 +154,11 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 10: Tentar salvar um aluno com curso igual a '-' - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarCursoDefault() {
         alunoValido.setCurso("-");
-        
+
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.salvar(alunoValido);
         });
-        
+
         assertEquals("Curso é obrigatório.", exception.getMessage());
         verify(alunoRepository, never()).save(any());
     }
@@ -163,9 +167,9 @@ class AlunoServiceImplTest {
     @DisplayName("Caso 11: Excluir um aluno - deve chamar repository.delete()")
     void testExcluirDeveChamarRepositorio() {
         int id = 5;
-        
+
         alunoService.excluir(id);
-        
+
         verify(alunoRepository, times(1)).delete(id);
     }
 
@@ -178,18 +182,18 @@ class AlunoServiceImplTest {
         alunoMock.setIdade(20);
         alunoMock.setCurso("Teste");
         alunoMock.setFase(1);
-        
+
         when(alunoRepository.findById(1)).thenReturn(alunoMock);
-        
+
         Aluno resultado = alunoService.buscarPorId(1);
-        
+
         verify(alunoRepository, times(1)).findById(1);
         assertNotNull(resultado);
         assertEquals(alunoMock, resultado);
         assertEquals(1, resultado.getId());
         assertEquals("Aluno Teste", resultado.getNome());
     }
-        @Test
+    @Test
     @DisplayName("Caso 13: Tentar salvar um aluno com fase menor que 1 - deve lançar ValidacaoException")
     void testSalvarNaoDeveSalvarFaseMenorQueUm() {
         alunoValido.setFase(0); // fase inválida
@@ -214,11 +218,11 @@ class AlunoServiceImplTest {
         assertEquals("Fase deve estar entre 1 e 10.", exception.getMessage());
         verify(alunoRepository, never()).save(any(Aluno.class));
     }
- 
+
     @Test
     @DisplayName("Atualizar - Caso 1: Tentar atualizar um aluno com ID menor ou igual a zero - deve lançar ValidacaoException")
     void testAtualizar_AlunoComIdMenorOuIgualZero_DeveLancarValidacaoException() {
-        alunoValido.setId(0); 
+        alunoValido.setId(0);
 
         ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
             alunoService.atualizar(alunoValido);
@@ -231,21 +235,21 @@ class AlunoServiceImplTest {
     @Test
     @DisplayName("Atualizar - Caso 2: Atualizar um aluno válido com ID maior que zero - deve chamar repository.update()")
     void testAtualizar_AlunoValido_DeveChamarRepositoryUpdate() throws ValidacaoException {
-        alunoValido.setId(1); 
+        alunoValido.setId(1);
 
         alunoService.atualizar(alunoValido);
 
         verify(alunoRepository, times(1)).update(alunoValido);
     }
 
-   @Test
+    @Test
     @DisplayName("Atualizar - Caso 3: Tentar atualizar um aluno nulo - comportamento atual: lança NullPointerException")
     void testAtualizar_AlunoNulo_DeveLancarNullPointerException() {
-    assertThrows(NullPointerException.class, () -> {
-        alunoService.atualizar(null);
-    });
+        assertThrows(NullPointerException.class, () -> {
+            alunoService.atualizar(null);
+        });
 
-    verify(alunoRepository, never()).update(any(Aluno.class));
+        verify(alunoRepository, never()).update(any(Aluno.class));
     }
 
 
@@ -254,15 +258,15 @@ class AlunoServiceImplTest {
     void testAtualizar_AlunoComNomeInvalido_DeveLancarValidacaoException() {
         alunoValido.setId(1);
 
-    
+
         alunoValido.setNome(null);
         assertThrows(ValidacaoException.class, () -> alunoService.atualizar(alunoValido));
 
-     
+
         alunoValido.setNome("");
         assertThrows(ValidacaoException.class, () -> alunoService.atualizar(alunoValido));
 
-    
+
         alunoValido.setNome("A");
         assertThrows(ValidacaoException.class, () -> alunoService.atualizar(alunoValido));
 
@@ -332,5 +336,119 @@ class AlunoServiceImplTest {
         verify(alunoRepository, never()).update(any(Aluno.class));
     }
 
-}
 
+    @Test
+    @DisplayName("Calcular Idade - Caso 1: Data de nascimento nula - deve lançar ValidacaoException")
+    void testCalcularIdade_ComDataNula_DeveLancarValidacaoException() {
+        // 1. Ação e Verificação
+        ValidacaoException ex = assertThrows(ValidacaoException.class, () -> {
+            alunoService.calcularIdade(null);
+        });
+
+        // 2. Assert
+        assertEquals("Data de nascimento não pode ser nula.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Calcular Idade - Caso 2: Aniversário ainda não ocorreu - deve subtrair um")
+    void testCalcularIdade_AniversarioAindaNaoOcorreu_DeveSubtrairUm() {
+        // 1. Setup
+        // Simula um aniversário de 20 anos que acontece AMANHÃ
+        Calendar dataNasc = Calendar.getInstance();
+        dataNasc.add(Calendar.DAY_OF_YEAR, 1); // Aniversário é amanhã
+        dataNasc.add(Calendar.YEAR, -20);      // 20 anos atrás
+        Date dataNascimento = dataNasc.getTime();
+
+        // 2. Ação
+        int idade = alunoService.calcularIdade(dataNascimento);
+
+        // 3. Assert
+        // A pessoa ainda tem 19 anos
+        assertEquals(19, idade);
+    }
+
+    @Test
+    @DisplayName("Calcular Idade - Caso 3: Aniversário já ocorreu - deve dar idade exata")
+    void testCalcularIdade_AniversarioJaOcorreu_DeveDarIdadeExata() {
+        // 1. Setup
+        // Simula um aniversário de 20 anos que aconteceu ONTEM
+        Calendar dataNasc = Calendar.getInstance();
+        dataNasc.add(Calendar.DAY_OF_YEAR, -1); // Aniversário foi ontem
+        dataNasc.add(Calendar.YEAR, -20);       // 20 anos atrás
+        Date dataNascimento = dataNasc.getTime();
+
+        // 2. Ação
+        int idade = alunoService.calcularIdade(dataNascimento);
+
+        // 3. Assert
+        // A pessoa já completou 20 anos
+        assertEquals(20, idade);
+    }
+
+    // --- NOVO TESTE ADICIONADO (O ÚLTIMO QUE FALTAVA) ---
+
+    @Test
+    @DisplayName("Listar Todos - Caso 1: Deve chamar repository.findAll() e retornar a lista")
+    void testListarTodos_DeveChamarFindAllUmaVez() {
+        // 1. Setup (Cria uma lista mock que o repositório deve retornar)
+        List<Aluno> listaMock = Arrays.asList(new Aluno(), new Aluno());
+        when(alunoRepository.findAll()).thenReturn(listaMock);
+
+        // 2. Ação
+        List<Aluno> resultado = alunoService.listarTodos();
+
+        // 3. Verificação
+        // Verifica se o repositório foi chamado exatamente 1 vez
+        verify(alunoRepository, times(1)).findAll();
+
+        // Verifica se o serviço retornou a mesma lista que o repositório forneceu
+        assertEquals(listaMock, resultado, "O método não retornou a lista do repositório.");
+        assertEquals(2, resultado.size());
+    }
+
+    @Test
+    @DisplayName("Salvar - Caso 15: Tentar salvar um aluno com nome contendo apenas números - deve lançar ValidacaoException")
+    void testSalvar_AlunoComNomeApenasNumeros_DeveLancarValidacaoException() {
+        // 1. Setup
+        alunoValido.setNome("123456"); // Inválido
+
+        // 2. Ação
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+
+        // 3. Assert
+        assertEquals("Nome é inválido (deve conter ao menos uma letra).", exception.getMessage());
+        verify(alunoRepository, never()).save(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Salvar - Caso 16: Tentar salvar um aluno com nome contendo apenas caracteres especiais - deve lançar ValidacaoException")
+    void testSalvar_AlunoComNomeApenasCaracteresEspeciais_DeveLancarValidacaoException() {
+        // 1. Setup
+        alunoValido.setNome("!@#$ %^&*"); // Inválido
+
+        // 2. Ação
+        ValidacaoException exception = assertThrows(ValidacaoException.class, () -> {
+            alunoService.salvar(alunoValido);
+        });
+
+        // 3. Assert
+        assertEquals("Nome é inválido (deve conter ao menos uma letra).", exception.getMessage());
+        verify(alunoRepository, never()).save(any(Aluno.class));
+    }
+
+    @Test
+    @DisplayName("Salvar - Caso 17: Salvar um aluno com nome misto (letras e números) - deve salvar")
+    void testSalvar_AlunoComNomeMistoValido_DeveSalvarCorretamente() throws ValidacaoException {
+        // 1. Setup
+        alunoValido.setNome("Davi 123"); // Válido
+
+        // 2. Ação
+        alunoService.salvar(alunoValido); // Não deve lançar exceção
+
+        // 3. Assert
+        // Verifica se o save foi chamado, provando que a validação passou
+        verify(alunoRepository, times(1)).save(alunoValido);
+    }
+}
