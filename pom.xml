@@ -28,13 +28,13 @@
         <sonar.exclusions>
             **/view/**,
             **/principal/**,
-            **/DAO/**
+            **/dao/**
         </sonar.exclusions>
         
         <sonar.coverage.exclusions>
             **/view/**,
             **/principal/**,
-            **/DAO/**
+            **/dao/**
         </sonar.coverage.exclusions>
     </properties>
 
