@@ -1,12 +1,36 @@
 package model;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Testes Unitários - Professor")
 class ProfessorTest {
+
+    @BeforeEach
+    void setUp() throws SQLException {
+        limparTabela();
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        limparTabela();
+    }
+
+    private void limparTabela() throws SQLException {
+        try (Connection conn = db.ConnectionFactory.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM tb_professores");
+        }
+    }
 
     @Test
     @DisplayName("Caso 1: Criar Professor com construtor padrão - deve criar instância com valores padrão")
@@ -178,6 +202,287 @@ class ProfessorTest {
         assertEquals("47922222222", professor.getContato());
         assertEquals("Novo Título", professor.getTitulo());
         assertEquals(8000.0, professor.getSalario(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Caso 12: getMinhaLista - deve retornar ArrayList de professores")
+    void testGetMinhaLista_DeveRetornarArrayListDeProfessores() {
+        Professor professor = new Professor();
+        
+        @SuppressWarnings("rawtypes")
+        ArrayList resultado = professor.getMinhaLista();
+        
+        assertNotNull(resultado);
+        assertTrue(resultado instanceof ArrayList);
+    }
+
+    @Test
+    @DisplayName("Caso 13: InsertProfessorBD - deve inserir professor no banco de dados")
+    void testInsertProfessorBD_DeveInserirProfessorNoBanco() throws SQLException {
+        Professor professor = new Professor();
+        
+        boolean resultado = professor.InsertProfessorBD(
+            "Tubarão", 
+            "12345678901", 
+            "47912345678", 
+            "Doutor", 
+            5000.0, 
+            "João Silva", 
+            30
+        );
+        
+        assertTrue(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 14: InsertProfessorBD com dados válidos - deve criar objeto Professor corretamente e salvar")
+    void testInsertProfessorBD_DadosValidos_DeveCriarObjetoESalvar() throws SQLException {
+        Professor professor = new Professor();
+        
+        boolean resultado = professor.InsertProfessorBD(
+            "Florianópolis",
+            "98765432109",
+            "47987654321",
+            "Mestre",
+            6000.0,
+            "Maria Santos",
+            35
+        );
+        
+        assertTrue(resultado);
+        
+        // Verificar se o professor foi salvo buscando pelo maior ID
+        int maiorId = professor.maiorID();
+        assertTrue(maiorId > 0);
+        
+        Professor professorSalvo = professor.carregaProfessor(maiorId);
+        assertNotNull(professorSalvo);
+        assertEquals("Maria Santos", professorSalvo.getNome());
+        assertEquals(35, professorSalvo.getIdade());
+        assertEquals("Florianópolis", professorSalvo.getCampus());
+        assertEquals("98765432109", professorSalvo.getCpf());
+    }
+
+    @Test
+    @DisplayName("Caso 15: DeleteProfessorBD - deve deletar professor do banco de dados")
+    void testDeleteProfessorBD_DeveDeletarProfessorDoBanco() throws SQLException {
+        Professor professor = new Professor();
+        
+        // Primeiro inserir um professor
+        professor.InsertProfessorBD(
+            "Tubarão",
+            "11111111111",
+            "47911111111",
+            "Doutor",
+            5000.0,
+            "Teste Delete",
+            25
+        );
+        
+        int id = professor.maiorID();
+        
+        // Deletar o professor
+        boolean resultado = professor.DeleteProfessorBD(id);
+        
+        assertTrue(resultado);
+        
+        // Verificar se foi deletado
+        Professor professorDeletado = professor.carregaProfessor(id);
+        assertNull(professorDeletado);
+    }
+
+    @Test
+    @DisplayName("Caso 16: DeleteProfessorBD com ID inexistente - deve retornar false")
+    void testDeleteProfessorBD_IdInexistente_DeveRetornarFalse() {
+        Professor professor = new Professor();
+        
+        boolean resultado = professor.DeleteProfessorBD(99999);
+        
+        assertFalse(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 17: UpdateProfessorBD - deve atualizar professor no banco de dados")
+    void testUpdateProfessorBD_DeveAtualizarProfessorNoBanco() throws SQLException {
+        Professor professor = new Professor();
+        
+        // Primeiro inserir um professor
+        professor.InsertProfessorBD(
+            "Tubarão",
+            "22222222222",
+            "47922222222",
+            "Doutor",
+            5000.0,
+            "Teste Update",
+            30
+        );
+        
+        int id = professor.maiorID();
+        
+        // Atualizar o professor
+        boolean resultado = professor.UpdateProfessorBD(
+            "Florianópolis",
+            "22222222222",
+            "47933333333",
+            "Mestre",
+            7000.0,
+            id,
+            "Teste Update Modificado",
+            35
+        );
+        
+        assertTrue(resultado);
+        
+        // Verificar se foi atualizado
+        Professor professorAtualizado = professor.carregaProfessor(id);
+        assertNotNull(professorAtualizado);
+        assertEquals("Teste Update Modificado", professorAtualizado.getNome());
+        assertEquals(35, professorAtualizado.getIdade());
+        assertEquals("Florianópolis", professorAtualizado.getCampus());
+        assertEquals(7000.0, professorAtualizado.getSalario(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Caso 18: UpdateProfessorBD com ID inexistente - deve retornar false")
+    void testUpdateProfessorBD_IdInexistente_DeveRetornarFalse() {
+        Professor professor = new Professor();
+        
+        boolean resultado = professor.UpdateProfessorBD(
+            "Tubarão",
+            "33333333333",
+            "47944444444",
+            "Doutor",
+            5000.0,
+            99999,
+            "Nome Teste",
+            30
+        );
+        
+        assertFalse(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 19: carregaProfessor - deve retornar professor existente")
+    void testCarregaProfessor_ProfessorExistente_DeveRetornarProfessor() throws SQLException {
+        Professor professor = new Professor();
+        
+        // Primeiro inserir um professor
+        professor.InsertProfessorBD(
+            "Tubarão",
+            "44444444444",
+            "47955555555",
+            "Doutor",
+            5000.0,
+            "Teste Carrega",
+            28
+        );
+        
+        int id = professor.maiorID();
+        
+        // Carregar o professor
+        Professor professorCarregado = professor.carregaProfessor(id);
+        
+        assertNotNull(professorCarregado);
+        assertEquals(id, professorCarregado.getId());
+        assertEquals("Teste Carrega", professorCarregado.getNome());
+        assertEquals(28, professorCarregado.getIdade());
+        assertEquals("Tubarão", professorCarregado.getCampus());
+    }
+
+    @Test
+    @DisplayName("Caso 20: carregaProfessor com ID inexistente - deve retornar null")
+    void testCarregaProfessor_IdInexistente_DeveRetornarNull() {
+        Professor professor = new Professor();
+        
+        Professor resultado = professor.carregaProfessor(99999);
+        
+        assertNull(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 21: maiorID - deve retornar o maior ID do banco de dados")
+    void testMaiorID_DeveRetornarMaiorId() throws SQLException {
+        Professor professor = new Professor();
+        
+        // Limpar tabela primeiro
+        limparTabela();
+        
+        // Inserir alguns professores
+        professor.InsertProfessorBD("Tubarão", "55555555555", "47966666666", "Doutor", 5000.0, "Professor 1", 30);
+        professor.InsertProfessorBD("Florianópolis", "66666666666", "47977777777", "Mestre", 6000.0, "Professor 2", 35);
+        professor.InsertProfessorBD("Araranguá", "77777777777", "47988888888", "Doutor", 7000.0, "Professor 3", 40);
+        
+        int maiorId = professor.maiorID();
+        
+        assertTrue(maiorId > 0);
+        
+        // Verificar se o último professor inserido tem esse ID
+        Professor ultimoProfessor = professor.carregaProfessor(maiorId);
+        assertNotNull(ultimoProfessor);
+        assertEquals("Professor 3", ultimoProfessor.getNome());
+    }
+
+    @Test
+    @DisplayName("Caso 22: maiorID com tabela vazia - deve retornar 0")
+    void testMaiorID_TabelaVazia_DeveRetornarZero() throws SQLException {
+        Professor professor = new Professor();
+        
+        // Garantir que a tabela está vazia
+        limparTabela();
+        
+        int maiorId = professor.maiorID();
+        
+        assertEquals(0, maiorId);
+    }
+
+    @Test
+    @DisplayName("Caso 23: Fluxo completo - inserir, carregar, atualizar e deletar")
+    void testFluxoCompleto_InserirCarregarAtualizarDeletar() throws SQLException {
+        Professor professor = new Professor();
+        
+        // 1. Inserir
+        boolean inserido = professor.InsertProfessorBD(
+            "Tubarão",
+            "88888888888",
+            "47999999999",
+            "Doutor",
+            5000.0,
+            "Fluxo Completo",
+            30
+        );
+        assertTrue(inserido);
+        
+        // 2. Carregar
+        int id = professor.maiorID();
+        Professor carregado = professor.carregaProfessor(id);
+        assertNotNull(carregado);
+        assertEquals("Fluxo Completo", carregado.getNome());
+        
+        // 3. Atualizar
+        boolean atualizado = professor.UpdateProfessorBD(
+            "Florianópolis",
+            "88888888888",
+            "47999999999",
+            "Mestre",
+            8000.0,
+            id,
+            "Fluxo Completo Atualizado",
+            35
+        );
+        assertTrue(atualizado);
+        
+        // Verificar atualização
+        Professor atualizadoObj = professor.carregaProfessor(id);
+        assertEquals("Fluxo Completo Atualizado", atualizadoObj.getNome());
+        assertEquals(8000.0, atualizadoObj.getSalario(), 0.01);
+        
+        // 4. Deletar
+        boolean deletado = professor.DeleteProfessorBD(id);
+        assertTrue(deletado);
+        
+        // Verificar deleção
+        Professor deletadoObj = professor.carregaProfessor(id);
+        assertNull(deletadoObj);
     }
 }
 
