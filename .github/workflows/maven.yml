@@ -99,7 +99,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn -B sonar:sonar \
+          mvn -B verify sonar:sonar \
             -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
             -Dsonar.organization=jopnovais \
             -Dsonar.host.url=https://sonarcloud.io \
