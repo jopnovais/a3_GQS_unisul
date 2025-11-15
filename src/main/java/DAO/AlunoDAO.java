@@ -119,9 +119,11 @@ public class AlunoDAO {
             return false;
         }
 
-        try (Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM tb_alunos WHERE id = " + id);
-            return true;
+        String sql = "DELETE FROM tb_alunos WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException erro) {
             return false;
         }
@@ -158,13 +160,17 @@ public class AlunoDAO {
             return objeto;
         }
 
-        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos WHERE id = " + id)) {
-
-            if (res.next()) {
-                objeto.setNome(res.getString("nome"));
-                objeto.setIdade(res.getInt("idade"));
-                objeto.setCurso(res.getString("curso"));
-                objeto.setFase(res.getInt("fase"));
+        String sql = "SELECT * FROM tb_alunos WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            
+            try (ResultSet res = stmt.executeQuery()) {
+                if (res.next()) {
+                    objeto.setNome(res.getString("nome"));
+                    objeto.setIdade(res.getInt("idade"));
+                    objeto.setCurso(res.getString("curso"));
+                    objeto.setFase(res.getInt("fase"));
+                }
             }
         } catch (SQLException erro) {
         }

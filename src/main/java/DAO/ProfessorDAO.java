@@ -129,9 +129,11 @@ public class ProfessorDAO {
             return false;
         }
 
-        try (Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("DELETE FROM tb_professores WHERE id = " + id);
-            return true;
+        String sql = "DELETE FROM tb_professores WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            int rowsAffected = stmt.executeUpdate();
+            return rowsAffected > 0;
         } catch (SQLException erro) {
             return false;
         }
@@ -171,17 +173,20 @@ public class ProfessorDAO {
             return objeto;
         }
 
-        try (Statement stmt = conn.createStatement();
-             ResultSet res = stmt.executeQuery("SELECT * FROM tb_professores WHERE id = " + id)) {
+        String sql = "SELECT * FROM tb_professores WHERE id = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
             
-            if (res.next()) {
-                objeto.setNome(res.getString("nome"));
-                objeto.setIdade(res.getInt("idade"));
-                objeto.setCampus(res.getString("campus"));
-                objeto.setCpf(res.getString("cpf"));
-                objeto.setContato(res.getString("contato"));
-                objeto.setTitulo(res.getString("titulo"));
-                objeto.setSalario(res.getDouble("salario"));
+            try (ResultSet res = stmt.executeQuery()) {
+                if (res.next()) {
+                    objeto.setNome(res.getString("nome"));
+                    objeto.setIdade(res.getInt("idade"));
+                    objeto.setCampus(res.getString("campus"));
+                    objeto.setCpf(res.getString("cpf"));
+                    objeto.setContato(res.getString("contato"));
+                    objeto.setTitulo(res.getString("titulo"));
+                    objeto.setSalario(res.getDouble("salario"));
+                }
             }
         } catch (SQLException erro) {
         }
