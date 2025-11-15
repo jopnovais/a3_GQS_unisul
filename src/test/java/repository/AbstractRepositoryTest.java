@@ -93,5 +93,34 @@ class AbstractRepositoryTest {
         
         assertEquals("Nome de tabela inválido: tabela_invalida", exception.getMessage());
     }
+
+    @Test
+    @DisplayName("Caso 4: executeMaxIdQuery com tabela tb_professores vazia - deve retornar 0")
+    void testExecuteMaxIdQuery_TabelaProfessoresVazia_DeveRetornarZero() throws SQLException {
+        try (Connection conn = ConnectionFactory.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DELETE FROM tb_professores");
+        }
+        
+        int resultado = repository.testExecuteMaxIdQuery("tb_professores");
+        assertEquals(0, resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 5: executeDelete com ID inexistente - deve retornar false")
+    void testExecuteDelete_IdInexistente_DeveRetornarFalse() {
+        boolean resultado = repository.testExecuteDelete("tb_alunos", 99999);
+        assertFalse(resultado);
+    }
+
+    @Test
+    @DisplayName("Caso 6: executeMaxIdQuery com buildMaxIdQuery para tabela inválida - deve lançar IllegalArgumentException")
+    void testBuildMaxIdQuery_TabelaInvalida_DeveLancarExcecao() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            repository.testExecuteMaxIdQuery("tabela_invalida_2");
+        });
+        
+        assertTrue(exception.getMessage().contains("Nome de tabela inválido"));
+    }
 }
 
