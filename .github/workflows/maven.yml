@@ -1,4 +1,4 @@
-name: Java CI/CD (Dev, HML, Prod)
+name: Java CI/CD (Dev, HMG, Prod)
 
 on:
   push:
@@ -8,37 +8,41 @@ on:
   workflow_dispatch:
 
 jobs:
+
   #----------------------------------------------
-  # 1. AMBIENTE DEV: Compilação
+  # 1. DEV — Compilação simples
   #----------------------------------------------
   build-dev:
     name: 1. Build (DEV)
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar JDK 8
+      - name: Configurar JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: "8"
+          java-version: "17"
           distribution: "temurin"
           cache: "maven"
 
-      - name: Compilar o projeto
+      - name: Compilar projeto (sem testes)
         run: mvn -B clean compile
 
+
   #----------------------------------------------
-  # 2. AMBIENTE HMG: Testes com múltiplas versões Java
+  # 2. HMG — Executar testes + gerar cobertura
   #----------------------------------------------
   build-hmg:
     name: 2. Test (HMG) - Java ${{ matrix.java-version }}
     runs-on: ubuntu-latest
     needs: build-dev
+
     strategy:
       fail-fast: false
       matrix:
-        java-version: ["8", "11", "17"]
+        java-version: ["17"]  # Apenas 17 porque o Jacoco funciona melhor aqui
 
     steps:
       - name: Checkout do código
@@ -51,27 +55,25 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Instalar Xvfb
-        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Rodar Testes + Gerar JaCoCo
+        run: mvn -B verify
 
-      - name: Compilar e Rodar Testes com JaCoCo (Xvfb)
-        run: xvfb-run --auto-servernum mvn -B clean verify -Dmaven.test.failure.ignore=true
-
-      - name: Upload Relatório JaCoCo
+      - name: Upload do relatório JaCoCo
         uses: actions/upload-artifact@v4
         with:
-          name: jacoco-report-${{ matrix.java-version }}
+          name: jacoco-report
           path: target/site/jacoco/jacoco.xml
-          if-no-files-found: ignore
+          if-no-files-found: error
+
 
   #----------------------------------------------
-  # 3. AMBIENTE DEV: Análise SonarCloud
+  # 3. ANALISAR COM SONARCLOUD (somente main)
   #----------------------------------------------
   analyze-sonar:
     name: 3. SonarCloud Analysis (somente main)
     runs-on: ubuntu-latest
     needs: build-hmg
-    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout do código
@@ -86,114 +88,72 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
-      - name: Compilar o projeto
-        run: mvn -B clean compile test-compile
-
-      - name: Detectar tipo de branch
-        id: branch-info
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ github.event_name }}" == "push" ]; then
-            echo "is_main=true" >> $GITHUB_OUTPUT
-            echo "Branch main detectada (push direto) - aplicando Quality Gate com 80% de cobertura"
-          else
-            echo "is_main=false" >> $GITHUB_OUTPUT
-            if [ "${{ github.event_name }}" == "pull_request" ]; then
-              echo "Pull Request detectado - análise sem exigência de cobertura"
-            else
-              echo "Branch de desenvolvimento detectada - análise sem exigência de cobertura"
-            fi
-          fi
-
-      - name: Download Relatório JaCoCo (apenas para main)
-        if: steps.branch-info.outputs.is_main == 'true'
+      - name: Download relatório JaCoCo
         uses: actions/download-artifact@v4
         with:
-          name: jacoco-report-17
-          path: .
+          name: jacoco-report
+          path: target/site/jacoco
 
-      - name: Preparar Relatório JaCoCo (apenas para main)
-        if: steps.branch-info.outputs.is_main == 'true'
-        run: |
-          mkdir -p target/site/jacoco
-          if [ -f jacoco.xml ]; then
-            cp jacoco.xml target/site/jacoco/jacoco.xml
-          fi
-
-      - name: Cache SonarCloud
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
-      - name: Analisar com SonarCloud
+      - name: Rodar análise Sonar com Quality Gate
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ steps.branch-info.outputs.is_main }}" == "true" ]; then
-            echo "Branch main detectada → Quality Gate rigoroso (80% cobertura exigida)"
-            mvn -B verify sonar:sonar \
-              -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
-              -Dsonar.organization=jopnovais \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.qualitygate.wait=true \
-              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-          else
-            echo "🧪 Branch de desenvolvimento detectada → Análise sem exigência de cobertura"
-            mvn -B verify sonar:sonar \
-              -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
-              -Dsonar.organization=jopnovais \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.qualitygate.wait=false
-          fi
+          mvn -B sonar:sonar \
+            -Dsonar.projectKey=jopnovais_a3_GQS_unisul \
+            -Dsonar.organization=jopnovais \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
 
   #----------------------------------------------
-  # 4. AMBIENTE PRD: Empacotamento
+  # 4. PRD — Empacotamento
   #----------------------------------------------
   build-prd:
     name: 4. Package (PRD)
     runs-on: ubuntu-latest
     needs: analyze-sonar
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Configurar JDK 8 (para build final)
+      - name: Configurar JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: "8"
+          java-version: "17"
           distribution: "temurin"
           cache: "maven"
 
       - name: Empacotar o projeto
-        run: mvn -B package -DskipTests
+        run: mvn -B clean package -DskipTests
 
       - name: Criar pasta de artefatos
         run: mkdir -p staging
 
-      - name: Copiar JAR
+      - name: Copiar JAR final
         run: cp target/*jar-with-dependencies.jar staging/
 
-      - name: Upload do JAR como Artefato
+      - name: Upload do artefato final
         uses: actions/upload-artifact@v4
         with:
           name: projeto-faculdade-jar
           path: staging
 
+
   #----------------------------------------------
-  # 5. AMBIENTE PRD: Criar Release (Manual)
+  # 5. PROD — Criar Release manual
   #----------------------------------------------
   create_release_prod:
-    name: 5. Release (PRD) - Manual
+    name: 5. Release (PROD - Manual)
     runs-on: ubuntu-latest
     needs: build-prd
     if: github.event_name == 'workflow_dispatch'
 
     steps:
-      - name: Download do JAR (Artefato da PRD)
+      - name: Download do JAR
         uses: actions/download-artifact@v4
         with:
           name: projeto-faculdade-jar
@@ -207,5 +167,3 @@ jobs:
           name: Release v1.0.${{ github.run_number }}
           body: "Release automática do projeto da faculdade."
           files: "*.jar"
-          draft: false
-          prerelease: false
