@@ -7,20 +7,47 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+/**
+ * Implementação da interface ProfessorService.
+ * Fornece serviços de negócio para operações com professores, incluindo validações e regras de negócio.
+ * 
+ * @author Sistema GQS
+ * @version 1.0
+ */
 public class ProfessorServiceImpl implements ProfessorService {
     
+    /**
+     * Repositório responsável pelas operações de persistência de professores.
+     */
     private final ProfessorRepository professorRepository;
     
+    /**
+     * Construtor que recebe o repositório de professores via injeção de dependência.
+     * 
+     * @param professorRepository O repositório de professores a ser utilizado
+     */
     public ProfessorServiceImpl(ProfessorRepository professorRepository) {
         this.professorRepository = professorRepository;
     }
     
+    /**
+     * Salva um novo professor no sistema após validar seus dados.
+     * 
+     * @param professor O professor a ser salvo
+     * @throws ValidacaoException Se os dados do professor forem inválidos
+     */
     @Override
     public void salvar(Professor professor) throws ValidacaoException {
         validarProfessor(professor, true);
         professorRepository.save(professor);
     }
     
+    /**
+     * Atualiza os dados de um professor existente no sistema após validar seus dados.
+     * 
+     * @param professor O professor com os dados atualizados
+     * @throws ValidacaoException Se os dados do professor forem inválidos ou o ID não for informado
+     */
     @Override
     public void atualizar(Professor professor) throws ValidacaoException {
         validarProfessor(professor, false);
@@ -30,26 +57,56 @@ public class ProfessorServiceImpl implements ProfessorService {
         professorRepository.update(professor);
     }
     
+    /**
+     * Exclui um professor do sistema pelo ID.
+     * 
+     * @param id O identificador único do professor a ser excluído
+     */
     @Override
     public void excluir(int id) {
         professorRepository.delete(id);
     }
     
+    /**
+     * Busca um professor pelo ID.
+     * 
+     * @param id O identificador único do professor
+     * @return O professor encontrado, ou null se não encontrado
+     */
     @Override
     public Professor buscarPorId(int id) {
         return professorRepository.findById(id);
     }
     
+    /**
+     * Busca um professor pelo CPF.
+     * 
+     * @param cpf O CPF do professor (11 dígitos numéricos)
+     * @return O professor encontrado, ou null se não encontrado
+     */
     @Override
     public Professor buscarPorCpf(String cpf) {
         return professorRepository.findByCpf(cpf);
     }
     
+    /**
+     * Lista todos os professores cadastrados no sistema.
+     * 
+     * @return Lista contendo todos os professores cadastrados
+     */
     @Override
     public List<Professor> listarTodos() {
         return professorRepository.findAll();
     }
     
+    /**
+     * Calcula a idade com base na data de nascimento fornecida.
+     * Considera se o aniversário já ocorreu no ano atual.
+     * 
+     * @param dataNascimento A data de nascimento
+     * @return A idade calculada em anos
+     * @throws ValidacaoException Se a data de nascimento for nula
+     */
     @Override
     public int calcularIdade(java.util.Date dataNascimento) {
         if (dataNascimento == null) {
@@ -72,6 +129,12 @@ public class ProfessorServiceImpl implements ProfessorService {
         return idade;
     }
     
+    /**
+     * Valida e formata uma string, removendo caracteres não numéricos.
+     * 
+     * @param input A string a ser formatada
+     * @return String contendo apenas os caracteres numéricos, ou string vazia se input for null
+     */
     @Override
     public String validarFormatado(String input) {
         if (input == null) {
@@ -90,6 +153,13 @@ public class ProfessorServiceImpl implements ProfessorService {
         return str.toString();
     }
     
+    /**
+     * Valida os dados de um professor de acordo com as regras de negócio.
+     * 
+     * @param professor O professor a ser validado
+     * @param isNovo    Indica se é um novo professor (true) ou uma atualização (false)
+     * @throws ValidacaoException Se algum dado do professor for inválido
+     */
     private void validarProfessor(Professor professor, boolean isNovo) throws ValidacaoException {
         if (professor == null) {
             throw new ValidacaoException("Professor não pode ser nulo.");
@@ -155,4 +225,3 @@ public class ProfessorServiceImpl implements ProfessorService {
         }
     }
 }
-
