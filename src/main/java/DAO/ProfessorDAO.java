@@ -1,4 +1,4 @@
-package DAO;
+package dao;
 
 import model.Professor;
 import view.TelaLogin;
@@ -24,9 +24,8 @@ public class ProfessorDAO {
             return maiorID;
         }
 
-        try (Statement stmt = conn.createStatement();
-             ResultSet res = stmt.executeQuery("SELECT MAX(id) id FROM tb_professores")) {
-            
+        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT MAX(id) id FROM tb_professores")) {
+
             if (res.next()) {
                 maiorID = res.getInt("id");
             }
@@ -50,7 +49,7 @@ public class ProfessorDAO {
             String password = TelaLogin.passwordDB;
 
             connection = DriverManager.getConnection(url, user, password);
-            
+
             // Verifica se a conexão é válida
             if (connection.isValid(1)) {
                 System.out.println("Status: Conectado!");
@@ -76,9 +75,8 @@ public class ProfessorDAO {
             return MinhaLista2;
         }
 
-        try (Statement stmt = conn.createStatement();
-             ResultSet res = stmt.executeQuery("SELECT * FROM tb_professores")) {
-            
+        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT * FROM tb_professores")) {
+
             while (res.next()) {
                 String campus = res.getString("campus");
                 String cpf = res.getString("cpf");
@@ -176,7 +174,7 @@ public class ProfessorDAO {
         String sql = "SELECT * FROM tb_professores WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            
+
             try (ResultSet res = stmt.executeQuery()) {
                 if (res.next()) {
                     objeto.setNome(res.getString("nome"));

@@ -21,7 +21,7 @@ public class Principal {
 
         try {
             Connection conexao = ConnectionFactory.getConnection();
-            
+
             if (conexao != null) {
                 try {
                     conexao.close();
