@@ -1,14 +1,19 @@
-package DAO;
-
-import model.Aluno;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+package dao;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import model.Aluno;
 
 @DisplayName("Testes Unitários - AlunoDAO")
 class AlunoDAOTest {
@@ -26,7 +31,7 @@ class AlunoDAOTest {
     @DisplayName("Caso 1: Construtor padrão - deve criar instância sem erros")
     void testConstrutor_DeveCriarInstanciaSemErros() {
         AlunoDAO dao = new AlunoDAO();
-        
+
         assertNotNull(dao);
     }
 
@@ -36,7 +41,7 @@ class AlunoDAOTest {
         // Como o DAO tenta conectar ao MySQL que pode não estar disponível,
         // o método pode retornar null se a conexão falhar
         java.sql.Connection conn = alunoDAO.getConexao();
-        
+
         // Pode ser null se MySQL não estiver disponível, ou uma conexão válida
         // Não podemos fazer assertNotNull pois depende do ambiente
         assertTrue(conn == null || conn != null);
@@ -48,7 +53,7 @@ class AlunoDAOTest {
         // Se getConexao retornar null, deve retornar a lista vazia
         @SuppressWarnings("rawtypes")
         ArrayList resultado = alunoDAO.getMinhaLista();
-        
+
         assertNotNull(resultado);
         assertTrue(resultado instanceof ArrayList);
     }
@@ -58,11 +63,11 @@ class AlunoDAOTest {
     void testGetMinhaLista_DeveLimparListaAntesDePreencher() {
         // Adicionar algo à lista estática
         AlunoDAO.MinhaLista.add(new Aluno());
-        
+
         // Chamar getMinhaLista deve limpar a lista
         @SuppressWarnings("rawtypes")
         ArrayList resultado = alunoDAO.getMinhaLista();
-        
+
         assertNotNull(resultado);
         // A lista pode estar vazia se não houver conexão ou se não houver dados
     }
@@ -76,7 +81,7 @@ class AlunoDAOTest {
         aluno.setIdade(20);
         aluno.setCurso("Teste");
         aluno.setFase(1);
-        
+
         // Se getConexao retornar null, deve lançar RuntimeException
         // Como não podemos garantir que a conexão será null, testamos o comportamento esperado
         // Se a conexão for null, deve lançar exceção
@@ -101,7 +106,7 @@ class AlunoDAOTest {
         aluno.setIdade(20);
         aluno.setCurso("Ciências da Computação");
         aluno.setFase(3);
-        
+
         // Se houver conexão válida, deve inserir
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn != null) {
@@ -110,8 +115,8 @@ class AlunoDAOTest {
                 assertTrue(resultado);
             } catch (RuntimeException e) {
                 // Se falhar por algum motivo, verificar mensagem
-                assertTrue(e.getMessage().contains("Não foi possível conectar") || 
-                          e.getMessage().contains("SQLException"));
+                assertTrue(e.getMessage().contains("Não foi possível conectar")
+                        || e.getMessage().contains("SQLException"));
             }
         } else {
             // Se não houver conexão, deve lançar exceção
@@ -125,7 +130,7 @@ class AlunoDAOTest {
     @DisplayName("Caso 7: DeleteAlunoBD com conexão null - deve retornar false")
     void testDeleteAlunoBD_ConexaoNull_DeveRetornarFalse() {
         int id = 1;
-        
+
         // Se getConexao retornar null, deve retornar false
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn == null) {
@@ -142,9 +147,9 @@ class AlunoDAOTest {
     @DisplayName("Caso 8: DeleteAlunoBD com ID inexistente - deve retornar false ou true")
     void testDeleteAlunoBD_IdInexistente_DeveRetornarFalseOuTrue() {
         int idInexistente = 99999;
-        
+
         boolean resultado = alunoDAO.DeleteAlunoBD(idInexistente);
-        
+
         // Pode retornar false se não encontrar ou true se executar (mesmo sem linhas afetadas)
         assertTrue(resultado || !resultado);
     }
@@ -158,7 +163,7 @@ class AlunoDAOTest {
         aluno.setIdade(25);
         aluno.setCurso("Engenharia");
         aluno.setFase(5);
-        
+
         // Se getConexao retornar null, deve lançar RuntimeException
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn == null) {
@@ -171,8 +176,8 @@ class AlunoDAOTest {
                 boolean resultado = alunoDAO.UpdateAlunoBD(aluno);
                 assertTrue(resultado || !resultado);
             } catch (RuntimeException e) {
-                assertTrue(e.getMessage().contains("Não foi possível conectar") || 
-                          e.getMessage().contains("SQLException"));
+                assertTrue(e.getMessage().contains("Não foi possível conectar")
+                        || e.getMessage().contains("SQLException"));
             }
         }
     }
@@ -186,7 +191,7 @@ class AlunoDAOTest {
         aluno.setIdade(22);
         aluno.setCurso("Administração");
         aluno.setFase(4);
-        
+
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn != null) {
             try {
@@ -207,12 +212,12 @@ class AlunoDAOTest {
     @DisplayName("Caso 11: carregaAluno com conexão null - deve retornar aluno com apenas ID")
     void testCarregaAluno_ConexaoNull_DeveRetornarAlunoComApenasId() {
         int id = 1;
-        
+
         // Se getConexao retornar null, deve retornar aluno com apenas ID setado
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn == null) {
             Aluno resultado = alunoDAO.carregaAluno(id);
-            
+
             assertNotNull(resultado);
             assertEquals(id, resultado.getId());
             // Outros campos devem estar vazios/null
@@ -228,9 +233,9 @@ class AlunoDAOTest {
     @DisplayName("Caso 12: carregaAluno com ID inexistente - deve retornar aluno com apenas ID")
     void testCarregaAluno_IdInexistente_DeveRetornarAlunoComApenasId() {
         int idInexistente = 99999;
-        
+
         Aluno resultado = alunoDAO.carregaAluno(idInexistente);
-        
+
         assertNotNull(resultado);
         assertEquals(idInexistente, resultado.getId());
         // Se não encontrar no banco, outros campos devem estar vazios/null
@@ -255,7 +260,7 @@ class AlunoDAOTest {
     @DisplayName("Caso 14: maiorID - deve retornar valor maior ou igual a zero")
     void testMaiorID_DeveRetornarValorMaiorOuIgualAZero() throws SQLException {
         int resultado = alunoDAO.maiorID();
-        
+
         assertTrue(resultado >= 0);
     }
 
@@ -268,7 +273,7 @@ class AlunoDAOTest {
         aluno.setIdade(18);
         aluno.setCurso("Teste");
         aluno.setFase(1);
-        
+
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn != null) {
             try {
@@ -293,7 +298,7 @@ class AlunoDAOTest {
         aluno.setIdade(0);
         aluno.setCurso(null);
         aluno.setFase(0);
-        
+
         java.sql.Connection conn = alunoDAO.getConexao();
         if (conn != null) {
             try {
@@ -319,7 +324,7 @@ class AlunoDAOTest {
             assertTrue(true); // Teste passa mas não executa o fluxo
             return;
         }
-        
+
         try {
             // 1. Inserir
             Aluno aluno = new Aluno();
@@ -328,25 +333,25 @@ class AlunoDAOTest {
             aluno.setIdade(20);
             aluno.setCurso("Teste");
             aluno.setFase(1);
-            
+
             boolean inserido = alunoDAO.InsertAlunoBD(aluno);
             assertTrue(inserido);
-            
+
             // 2. Carregar
             Aluno carregado = alunoDAO.carregaAluno(100);
             assertNotNull(carregado);
             assertEquals(100, carregado.getId());
-            
+
             // 3. Atualizar
             aluno.setNome("Fluxo Completo Atualizado");
             aluno.setFase(2);
             boolean atualizado = alunoDAO.UpdateAlunoBD(aluno);
             assertTrue(atualizado);
-            
+
             // 4. Deletar
             boolean deletado = alunoDAO.DeleteAlunoBD(100);
             assertTrue(deletado);
-            
+
         } catch (RuntimeException e) {
             // Se houver erro SQL, o teste ainda é válido
             assertTrue(e.getMessage().contains("SQLException"));
@@ -361,12 +366,11 @@ class AlunoDAOTest {
         AlunoDAO dao1 = new AlunoDAO();
         @SuppressWarnings("unused")
         AlunoDAO dao2 = new AlunoDAO();
-        
+
         // Ambas devem referenciar a mesma lista estática
         assertSame(AlunoDAO.MinhaLista, AlunoDAO.MinhaLista);
-        
+
         // Limpar após o teste
         AlunoDAO.MinhaLista.clear();
     }
 }
-
