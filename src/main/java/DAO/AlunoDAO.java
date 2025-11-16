@@ -10,13 +10,32 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * Classe DAO (Data Access Object) para operações de acesso a dados de alunos.
+ * Utiliza MySQL como banco de dados e mantém uma lista estática de alunos em memória.
+ * 
+ * @author Sistema GQS
+ * @version 1.0
+ */
 public class AlunoDAO {
 
+    /**
+     * Lista estática que armazena os alunos em memória.
+     */
     public static ArrayList<Aluno> MinhaLista = new ArrayList<Aluno>();
 
+    /**
+     * Construtor padrão sem parâmetros.
+     */
     public AlunoDAO() {
     }
 
+    /**
+     * Retorna o maior ID cadastrado no banco de dados.
+     * 
+     * @return O maior ID encontrado, ou 0 se não houver registros ou se a conexão falhar
+     * @throws SQLException Se ocorrer um erro ao acessar o banco de dados
+     */
     public int maiorID() throws SQLException {
         int maiorID = 0;
         Connection conn = this.getConexao();
@@ -91,6 +110,13 @@ public class AlunoDAO {
         return MinhaLista;
     }
 
+    /**
+     * Insere um novo aluno no banco de dados.
+     * 
+     * @param objeto O aluno a ser inserido
+     * @return true se o aluno foi inserido com sucesso
+     * @throws RuntimeException Se não for possível conectar ao banco de dados ou ocorrer um erro SQL
+     */
     public boolean InsertAlunoBD(Aluno objeto) {
         String sql = "INSERT INTO tb_alunos(id,nome,idade,curso,fase) VALUES(?,?,?,?,?)";
 
@@ -113,6 +139,12 @@ public class AlunoDAO {
         }
     }
 
+    /**
+     * Remove um aluno do banco de dados pelo ID.
+     * 
+     * @param id O identificador único do aluno a ser removido
+     * @return true se o aluno foi removido com sucesso, false caso contrário ou se a conexão falhar
+     */
     public boolean DeleteAlunoBD(int id) {
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -129,6 +161,13 @@ public class AlunoDAO {
         }
     }
 
+    /**
+     * Atualiza os dados de um aluno existente no banco de dados.
+     * 
+     * @param objeto O aluno com os dados atualizados
+     * @return true se o aluno foi atualizado com sucesso
+     * @throws RuntimeException Se não for possível conectar ao banco de dados ou ocorrer um erro SQL
+     */
     public boolean UpdateAlunoBD(Aluno objeto) {
         String sql = "UPDATE tb_alunos set nome = ? ,idade = ? ,curso = ? ,fase = ? WHERE id = ?";
 
@@ -151,6 +190,12 @@ public class AlunoDAO {
         }
     }
 
+    /**
+     * Carrega um aluno do banco de dados pelo ID.
+     * 
+     * @param id O identificador único do aluno a ser carregado
+     * @return O aluno encontrado com os dados do banco, ou um aluno vazio (apenas com ID) se não encontrado ou se a conexão falhar
+     */
     public Aluno carregaAluno(int id) {
         Aluno objeto = new Aluno();
         objeto.setId(id);
