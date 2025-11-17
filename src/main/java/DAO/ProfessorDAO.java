@@ -10,32 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-/**
- * Classe DAO (Data Access Object) para operações de acesso a dados de professores.
- * Utiliza MySQL como banco de dados e mantém uma lista estática de professores em memória.
- * 
- * @author Sistema GQS
- * @version 1.0
- */
 public class ProfessorDAO {
 
-    /**
-     * Lista estática que armazena os professores em memória.
-     */
     public static ArrayList<Professor> MinhaLista2 = new ArrayList<Professor>();
 
-    /**
-     * Construtor padrão sem parâmetros.
-     */
     public ProfessorDAO() {
     }
 
-    /**
-     * Retorna o maior ID cadastrado no banco de dados.
-     * 
-     * @return O maior ID encontrado, ou 0 se não houver registros ou se a conexão falhar
-     * @throws SQLException Se ocorrer um erro ao acessar o banco de dados
-     */
     public int maiorID() throws SQLException {
         int maiorID = 0;
         Connection conn = this.getConexao();
@@ -54,12 +35,6 @@ public class ProfessorDAO {
         return maiorID;
     }
 
-    /**
-     * Estabelece uma conexão com o banco de dados MySQL.
-     * Utiliza as credenciais armazenadas em TelaLogin.
-     * 
-     * @return Uma conexão com o banco de dados, ou null se a conexão falhar
-     */
     public Connection getConexao() {
 
         Connection connection = null;
@@ -92,12 +67,6 @@ public class ProfessorDAO {
         }
     }
 
-    /**
-     * Retorna uma lista com todos os professores cadastrados no banco de dados.
-     * Limpa a lista estática antes de preenchê-la novamente.
-     * 
-     * @return ArrayList contendo todos os professores cadastrados, ou lista vazia se a conexão falhar
-     */
     public ArrayList getMinhaLista() {
         MinhaLista2.clear();
 
@@ -127,13 +96,6 @@ public class ProfessorDAO {
         return MinhaLista2;
     }
 
-    /**
-     * Insere um novo professor no banco de dados.
-     * 
-     * @param objeto O professor a ser inserido
-     * @return true se o professor foi inserido com sucesso
-     * @throws RuntimeException Se não for possível conectar ao banco de dados ou ocorrer um erro SQL
-     */
     public boolean InsertProfessorBD(Professor objeto) {
         String sql = "INSERT INTO tb_professores(id,nome,idade,campus,cpf,contato,titulo,salario) VALUES(?,?,?,?,?,?,?,?)";
 
@@ -159,12 +121,6 @@ public class ProfessorDAO {
         }
     }
 
-    /**
-     * Remove um professor do banco de dados pelo ID.
-     * 
-     * @param id O identificador único do professor a ser removido
-     * @return true se o professor foi removido com sucesso, false caso contrário ou se a conexão falhar
-     */
     public boolean DeleteProfessorBD(int id) {
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -181,13 +137,6 @@ public class ProfessorDAO {
         }
     }
 
-    /**
-     * Atualiza os dados de um professor existente no banco de dados.
-     * 
-     * @param objeto O professor com os dados atualizados
-     * @return true se o professor foi atualizado com sucesso
-     * @throws RuntimeException Se não for possível conectar ao banco de dados ou ocorrer um erro SQL
-     */
     public boolean UpdateProfessorBD(Professor objeto) {
         String sql = "UPDATE tb_professores set nome = ? ,idade = ? ,campus = ? ,cpf = ? ,contato = ? ,titulo = ? ,salario = ? WHERE id = ?";
 
@@ -213,12 +162,6 @@ public class ProfessorDAO {
         }
     }
 
-    /**
-     * Carrega um professor do banco de dados pelo ID.
-     * 
-     * @param id O identificador único do professor a ser carregado
-     * @return O professor encontrado com os dados do banco, ou um professor vazio (apenas com ID) se não encontrado ou se a conexão falhar
-     */
     public Professor carregaProfessor(int id) {
         Professor objeto = new Professor();
         objeto.setId(id);
