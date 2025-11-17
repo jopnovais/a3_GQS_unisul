@@ -1,4 +1,4 @@
-package dao;
+package DAO;
 
 import model.Aluno;
 import view.TelaLogin;
@@ -163,7 +163,7 @@ public class AlunoDAO {
         String sql = "SELECT * FROM tb_alunos WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-
+            
             try (ResultSet res = stmt.executeQuery()) {
                 if (res.next()) {
                     objeto.setNome(res.getString("nome"));
