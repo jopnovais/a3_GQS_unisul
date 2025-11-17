@@ -10,13 +10,29 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * Classe responsável pela manipulação dos dados da entidade {@link Aluno}
+ * no banco de dados MySQL. Implementa operações CRUD e auxilia no gerenciamento
+ * da conexão utilizando JDBC.
+ *
+ * <p>As credenciais utilizadas para conexão são obtidas na tela de login
+ * através de {@link TelaLogin#userDB} e {@link TelaLogin#passwordDB}.</p>
+ */
 public class AlunoDAO {
 
-    public static ArrayList<Aluno> MinhaLista = new ArrayList<Aluno>();
+    /** Lista estática utilizada para armazenar objetos Aluno recuperados do banco. */
+    public static ArrayList<Aluno> MinhaLista = new ArrayList<>();
 
+    /** Construtor padrão. */
     public AlunoDAO() {
     }
 
+    /**
+     * Retorna o maior ID encontrado na tabela de alunos.
+     *
+     * @return o maior valor de ID existente; retorna 0 caso não haja registros ou erro.
+     * @throws SQLException caso ocorra erro na execução da consulta SQL.
+     */
     public int maiorID() throws SQLException {
         int maiorID = 0;
         Connection conn = this.getConexao();
@@ -24,7 +40,8 @@ public class AlunoDAO {
             return maiorID;
         }
 
-        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT MAX(id) id FROM tb_alunos")) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet res = stmt.executeQuery("SELECT MAX(id) id FROM tb_alunos")) {
 
             if (res.next()) {
                 maiorID = res.getInt("id");
@@ -34,6 +51,11 @@ public class AlunoDAO {
         return maiorID;
     }
 
+    /**
+     * Estabelece e retorna uma conexão com o banco de dados MySQL.
+     *
+     * @return conexão ativa se for bem-sucedida; caso contrário, retorna {@code null}.
+     */
     public Connection getConexao() {
 
         Connection connection = null;
@@ -47,24 +69,30 @@ public class AlunoDAO {
             String password = TelaLogin.passwordDB;
 
             connection = DriverManager.getConnection(url, user, password);
+
             if (connection.isValid(1)) {
                 System.out.println("Status: Conectado!");
             } else {
-                System.out.println("Status: N�O CONECTADO!");
+                System.out.println("Status: NÃO CONECTADO!");
             }
 
             return connection;
 
-        } catch (ClassNotFoundException e) {  //Driver não encontrado
-            System.out.println("O driver nao foi encontrado. " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("O driver não foi encontrado. " + e.getMessage());
             return null;
 
         } catch (SQLException e) {
-            System.out.println("Nao foi possivel conectar...");
+            System.out.println("Não foi possível conectar...");
             return null;
         }
     }
 
+    /**
+     * Retorna uma lista contendo todos os registros de alunos presentes no banco de dados.
+     *
+     * @return lista de objetos {@link Aluno}.
+     */
     public ArrayList getMinhaLista() {
         MinhaLista.clear();
 
@@ -73,7 +101,8 @@ public class AlunoDAO {
             return MinhaLista;
         }
 
-        try (Statement stmt = conn.createStatement(); ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos")) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet res = stmt.executeQuery("SELECT * FROM tb_alunos")) {
 
             while (res.next()) {
                 String curso = res.getString("curso");
@@ -91,6 +120,12 @@ public class AlunoDAO {
         return MinhaLista;
     }
 
+    /**
+     * Insere um novo registro de aluno no banco de dados.
+     *
+     * @param objeto objeto {@link Aluno} contendo os dados a serem salvos.
+     * @return {@code true} se a inserção foi realizada com sucesso.
+     */
     public boolean InsertAlunoBD(Aluno objeto) {
         String sql = "INSERT INTO tb_alunos(id,nome,idade,curso,fase) VALUES(?,?,?,?,?)";
 
@@ -113,6 +148,12 @@ public class AlunoDAO {
         }
     }
 
+    /**
+     * Remove um aluno do banco de dados com base no ID fornecido.
+     *
+     * @param id identificador do aluno a ser removido.
+     * @return {@code true} se o aluno foi removido com sucesso.
+     */
     public boolean DeleteAlunoBD(int id) {
         Connection conn = this.getConexao();
         if (conn == null) {
@@ -129,6 +170,12 @@ public class AlunoDAO {
         }
     }
 
+    /**
+     * Atualiza os dados de um aluno existente no banco de dados.
+     *
+     * @param objeto objeto {@link Aluno} contendo informações atualizadas.
+     * @return {@code true} se a atualização foi realizada com sucesso.
+     */
     public boolean UpdateAlunoBD(Aluno objeto) {
         String sql = "UPDATE tb_alunos set nome = ? ,idade = ? ,curso = ? ,fase = ? WHERE id = ?";
 
@@ -151,6 +198,13 @@ public class AlunoDAO {
         }
     }
 
+    /**
+     * Carrega os dados de um aluno específico a partir do seu ID.
+     *
+     * @param id identificador do aluno a ser buscado.
+     * @return um objeto {@link Aluno} preenchido com os dados encontrados;
+     *         caso não exista, devolve um objeto contendo apenas o ID.
+     */
     public Aluno carregaAluno(int id) {
         Aluno objeto = new Aluno();
         objeto.setId(id);
@@ -163,7 +217,7 @@ public class AlunoDAO {
         String sql = "SELECT * FROM tb_alunos WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            
+
             try (ResultSet res = stmt.executeQuery()) {
                 if (res.next()) {
                     objeto.setNome(res.getString("nome"));
