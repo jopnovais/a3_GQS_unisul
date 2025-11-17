@@ -9,9 +9,33 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * Tela de gerenciamento de alunos.
+ * <p>
+ * Esta interface gráfica exibe a lista completa de alunos cadastrados,
+ * permite cadastrar novos registros, editar dados existentes e excluir
+ * alunos diretamente da tabela. Também oferece atalhos via menu para
+ * outras telas do sistema, como a gerência de professores.
+ * </p>
+ *
+ * <p>
+ * Os dados são carregados através de um {@link AlunoService}, garantindo
+ * que toda operação de alteração, exclusão ou listagem siga as regras
+ * de negócio definidas na camada de serviço.
+ * </p>
+ */
+
 public class GerenciaAlunos extends javax.swing.JFrame {
 
     private final AlunoService alunoService;
+
+    /**
+     * Constrói a tela de gerenciamento de alunos.
+     * <p>
+     * Inicializa o repositório, serviço, componentes gráficos e carrega
+     * automaticamente a tabela com a lista completa de alunos cadastrados.
+     * </p>
+     */
 
     public GerenciaAlunos() {
         AlunoRepository alunoRepository = new AlunoRepositoryImpl();
@@ -23,6 +47,15 @@ public class GerenciaAlunos extends javax.swing.JFrame {
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+
+    /**
+     * Inicializa os componentes gráficos da interface.
+     *
+     * <p>
+     * Este método é gerado automaticamente pelo editor visual do NetBeans.
+     * Alterações manuais não são recomendadas.
+     * </p>
+     */
     private void initComponents() {
 
         bCadastro = new javax.swing.JButton();
@@ -198,6 +231,12 @@ public class GerenciaAlunos extends javax.swing.JFrame {
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
+    
+    /**
+     * Abre a tela de gerência de professores e fecha a tela atual.
+     *
+     * @param evt evento de clique do item de menu.
+     */
 
     private void menuGerenciaProfessoresActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuGerenciaProfessoresActionPerformed
         GerenciaProfessores tela = new GerenciaProfessores();
@@ -205,15 +244,37 @@ public class GerenciaAlunos extends javax.swing.JFrame {
         this.dispose();
     }//GEN-LAST:event_menuGerenciaProfessoresActionPerformed
 
+    /**
+     * Encerra completamente o sistema.
+     *
+     * @param evt evento de clique do item de menu Sair.
+     */
+
     private void menuLeaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuLeaveActionPerformed
         System.exit(0);
     }//GEN-LAST:event_menuLeaveActionPerformed
+
+    /**
+     * Abre a tela de cadastro de um novo aluno.
+     *
+     * @param evt evento de clique do botão "Cadastrar novo".
+     */
 
     private void bCadastroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bCadastroActionPerformed
         CadastroAluno tela = new CadastroAluno();
         tela.setVisible(true);
 
     }//GEN-LAST:event_bCadastroActionPerformed
+
+    /**
+     * Abre a tela de edição de aluno para o registro selecionado.
+     * <p>
+     * Caso nenhuma linha esteja selecionada na tabela, uma mensagem de
+     * aviso é exibida ao usuário.
+     * </p>
+     *
+     * @param evt evento de clique do botão "Editar".
+     */
 
     private void bEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bEditarActionPerformed
         if (this.jTableAlunos.getSelectedRow() != -1) {
@@ -226,6 +287,14 @@ public class GerenciaAlunos extends javax.swing.JFrame {
     }//GEN-LAST:event_bEditarActionPerformed
 
     public static String listaDados2[] = new String[5];
+
+    /**
+     * Captura os dados do aluno selecionado na tabela e os armazena
+     * no vetor estático {@code listaDados2}, permitindo que a tela
+     * de edição carregue essas informações.
+     *
+     * @param evt evento de clique na tabela.
+     */
 
     private void jTableAlunosMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableAlunosMouseClicked
         if (this.jTableAlunos.getSelectedRow() != -1) {
@@ -246,6 +315,17 @@ public class GerenciaAlunos extends javax.swing.JFrame {
 
         }
     }//GEN-LAST:event_jTableAlunosMouseClicked
+
+    /**
+     * Exclui o aluno selecionado da lista.
+     * <p>
+     * Antes da exclusão, o usuário deve confirmar a operação. Caso não
+     * haja linha selecionada ou ocorra algum erro inesperado, mensagens
+     * apropriadas são exibidas.
+     * </p>
+     *
+     * @param evt evento de clique do botão "Deletar".
+     */
 
     private void bDeletarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bDeletarActionPerformed
         try {
@@ -272,13 +352,31 @@ public class GerenciaAlunos extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_bDeletarActionPerformed
 
+    /**
+     * Atualiza a tabela de alunos exibida no formulário.
+     *
+     * @param evt evento de clique do botão Atualizar.
+     */
+
     private void refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshActionPerformed
         this.carregaTabela();
     }//GEN-LAST:event_refreshActionPerformed
 
+    /**
+     * Atualiza os dados da tabela através do menu.
+     *
+     * @param evt evento de clique no item de menu Atualizar tabela.
+     */
+
     private void menuRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuRefreshActionPerformed
         this.carregaTabela();
     }//GEN-LAST:event_menuRefreshActionPerformed
+
+    /**
+     * Abre a tela "Sobre" com informações do sistema.
+     *
+     * @param evt evento de clique no item de menu Sobre.
+     */
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         Sobre tela = new Sobre();
@@ -286,6 +384,14 @@ public class GerenciaAlunos extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     @SuppressWarnings("unchecked")
+
+    /**
+     * Carrega todos os alunos cadastrados e preenche a tabela da interface.
+     * <p>
+     * Caso ocorra algum erro inesperado durante a busca, uma mensagem de
+     * erro é exibida ao usuário.
+     * </p>
+     */
     public void carregaTabela() {
         DefaultTableModel modelo = (DefaultTableModel) this.jTableAlunos.getModel();
         modelo.setNumRows(0);
@@ -307,7 +413,9 @@ public class GerenciaAlunos extends javax.swing.JFrame {
     }
 
     /**
-     * @param args the command line arguments
+     * Método principal que inicia a tela de gerenciamento de alunos.
+     *
+     * @param args argumentos de linha de comando (não utilizados).
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */

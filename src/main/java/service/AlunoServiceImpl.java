@@ -7,20 +7,36 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+/**
+ * Implementação da interface {@link AlunoService}, responsável por aplicar
+ * regras de negócio relacionadas ao gerenciamento de alunos antes de delegar
+ * as operações de persistência ao {@link AlunoRepository}.
+ */
 public class AlunoServiceImpl implements AlunoService {
 
     private final AlunoRepository alunoRepository;
 
+    /**
+     * Construtor que injeta o repositório responsável pela persistência de alunos.
+     *
+     * @param alunoRepository instância de {@link AlunoRepository} utilizada pela camada de serviço.
+     */
     public AlunoServiceImpl(AlunoRepository alunoRepository) {
         this.alunoRepository = alunoRepository;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void salvar(Aluno aluno) throws ValidacaoException {
         validarAluno(aluno);
         alunoRepository.save(aluno);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void atualizar(Aluno aluno) throws ValidacaoException {
         validarAluno(aluno);
@@ -30,21 +46,33 @@ public class AlunoServiceImpl implements AlunoService {
         alunoRepository.update(aluno);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void excluir(int id) {
         alunoRepository.delete(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Aluno buscarPorId(int id) {
         return alunoRepository.findById(id);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<Aluno> listarTodos() {
         return alunoRepository.findAll();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int calcularIdade(java.util.Date dataNascimento) {
         if (dataNascimento == null) {
@@ -67,6 +95,12 @@ public class AlunoServiceImpl implements AlunoService {
         return idade;
     }
 
+    /**
+     * Realiza as validações das informações do aluno antes de persistir ou atualizar.
+     *
+     * @param aluno objeto {@link Aluno} a ser validado.
+     * @throws ValidacaoException caso qualquer regra de validação seja violada.
+     */
     private void validarAluno(Aluno aluno) throws ValidacaoException {
         if (aluno == null) {
             throw new ValidacaoException("Aluno não pode ser nulo.");

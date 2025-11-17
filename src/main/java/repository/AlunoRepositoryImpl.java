@@ -9,8 +9,23 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Implementação concreta de {@link AlunoRepository} responsável por realizar
+ * operações de persistência no banco de dados SQLite usando a estrutura
+ * fornecida por {@link AbstractRepository}. <br><br>
+ *
+ * Esta classe encapsula toda a lógica de acesso a dados da entidade {@link Aluno},
+ * garantindo separação clara entre regras de negócio e persistência.
+ */
 public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepository {
     
+    /**
+     * Insere um novo aluno na tabela <code>tb_alunos</code>.
+     *
+     * @param aluno objeto {@link Aluno} contendo os dados a serem salvos
+     * @return true se o registro for inserido com sucesso
+     * @throws DataAccessException caso ocorra algum erro na operação SQL
+     */
     @Override
     public boolean save(Aluno aluno) {
         String sql = "INSERT INTO tb_alunos(nome, idade, curso, fase) VALUES(?, ?, ?, ?)";
@@ -30,6 +45,13 @@ public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepo
         }
     }
     
+    /**
+     * Atualiza os dados de um aluno já cadastrado no banco.
+     *
+     * @param aluno instância existente com dados atualizados
+     * @return true se algum registro foi modificado; false caso contrário
+     * @throws DataAccessException caso ocorra algum erro ao executar o UPDATE
+     */
     @Override
     public boolean update(Aluno aluno) {
         String sql = "UPDATE tb_alunos SET nome = ?, idade = ?, curso = ?, fase = ? WHERE id = ?";
@@ -50,11 +72,24 @@ public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepo
         }
     }
     
+    /**
+     * Remove um aluno da base pelo seu identificador único.
+     *
+     * @param id identificador do aluno
+     * @return true se o registro foi removido
+     */
     @Override
     public boolean delete(int id) {
         return executeDelete("tb_alunos", id);
     }
     
+    /**
+     * Busca um aluno pelo ID.
+     *
+     * @param id identificador do aluno
+     * @return o aluno encontrado ou null caso não exista
+     * @throws DataAccessException caso ocorra falha na consulta
+     */
     @Override
     public Aluno findById(int id) {
         String sql = "SELECT * FROM tb_alunos WHERE id = ?";
@@ -76,6 +111,13 @@ public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepo
         return null;
     }
     
+    /**
+     * Constrói um objeto {@link Aluno} a partir de um {@link ResultSet}.
+     *
+     * @param res resultado da consulta SQL
+     * @return instância preenchida de {@link Aluno}
+     * @throws SQLException caso o acesso aos campos falhe
+     */
     private Aluno criarAlunoDoResultSet(ResultSet res) throws SQLException {
         Aluno aluno = new Aluno();
         aluno.setId(res.getInt("id"));
@@ -86,6 +128,12 @@ public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepo
         return aluno;
     }
     
+    /**
+     * Retorna todos os alunos cadastrados na base.
+     *
+     * @return lista contendo todos os alunos
+     * @throws DataAccessException caso a consulta falhe
+     */
     @Override
     public List<Aluno> findAll() {
         List<Aluno> alunos = new ArrayList<>();
@@ -105,9 +153,13 @@ public class AlunoRepositoryImpl extends AbstractRepository implements AlunoRepo
         return alunos;
     }
     
+    /**
+     * Obtém o maior ID da tabela <code>tb_alunos</code>.
+     *
+     * @return maior ID encontrado ou 0 caso a tabela esteja vazia
+     */
     @Override
     public int getMaxId() {
         return executeMaxIdQuery("tb_alunos");
     }
 }
-
