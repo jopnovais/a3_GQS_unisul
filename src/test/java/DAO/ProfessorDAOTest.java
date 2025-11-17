@@ -1,14 +1,19 @@
 package DAO;
 
-import model.Professor;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.*;
+import model.Professor;
 
 @DisplayName("Testes Unitários - ProfessorDAO")
 class ProfessorDAOTest {
@@ -26,7 +31,7 @@ class ProfessorDAOTest {
     @DisplayName("Caso 1: Construtor padrão - deve criar instância sem erros")
     void testConstrutor_DeveCriarInstanciaSemErros() {
         ProfessorDAO dao = new ProfessorDAO();
-        
+
         assertNotNull(dao);
     }
 
@@ -36,7 +41,7 @@ class ProfessorDAOTest {
         // Como o DAO tenta conectar ao MySQL que pode não estar disponível,
         // o método pode retornar null se a conexão falhar
         java.sql.Connection conn = professorDAO.getConexao();
-        
+
         // Pode ser null se MySQL não estiver disponível, ou uma conexão válida
         // Não podemos fazer assertNotNull pois depende do ambiente
         assertTrue(conn == null || conn != null);
@@ -48,7 +53,7 @@ class ProfessorDAOTest {
         // Se getConexao retornar null, deve retornar a lista vazia
         @SuppressWarnings("rawtypes")
         ArrayList resultado = professorDAO.getMinhaLista();
-        
+
         assertNotNull(resultado);
         assertTrue(resultado instanceof ArrayList);
     }
@@ -58,11 +63,11 @@ class ProfessorDAOTest {
     void testGetMinhaLista_DeveLimparListaAntesDePreencher() {
         // Adicionar algo à lista estática
         ProfessorDAO.MinhaLista2.add(new Professor());
-        
+
         // Chamar getMinhaLista deve limpar a lista
         @SuppressWarnings("rawtypes")
         ArrayList resultado = professorDAO.getMinhaLista();
-        
+
         assertNotNull(resultado);
         // A lista pode estar vazia se não houver conexão ou se não houver dados
     }
@@ -79,7 +84,7 @@ class ProfessorDAOTest {
         professor.setContato("47912345678");
         professor.setTitulo("Doutor");
         professor.setSalario(5000.0);
-        
+
         // Se getConexao retornar null, deve lançar RuntimeException
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn == null) {
@@ -104,7 +109,7 @@ class ProfessorDAOTest {
         professor.setContato("47912345678");
         professor.setTitulo("Doutor");
         professor.setSalario(5000.0);
-        
+
         // Se houver conexão válida, deve inserir
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn != null) {
@@ -113,8 +118,8 @@ class ProfessorDAOTest {
                 assertTrue(resultado);
             } catch (RuntimeException e) {
                 // Se falhar por algum motivo, verificar mensagem
-                assertTrue(e.getMessage().contains("Não foi possível conectar") || 
-                          e.getMessage().contains("SQLException"));
+                assertTrue(e.getMessage().contains("Não foi possível conectar")
+                        || e.getMessage().contains("SQLException"));
             }
         } else {
             // Se não houver conexão, deve lançar exceção
@@ -128,7 +133,7 @@ class ProfessorDAOTest {
     @DisplayName("Caso 7: DeleteProfessorBD com conexão null - deve retornar false")
     void testDeleteProfessorBD_ConexaoNull_DeveRetornarFalse() {
         int id = 1;
-        
+
         // Se getConexao retornar null, deve retornar false
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn == null) {
@@ -145,9 +150,9 @@ class ProfessorDAOTest {
     @DisplayName("Caso 8: DeleteProfessorBD com ID inexistente - deve retornar false ou true")
     void testDeleteProfessorBD_IdInexistente_DeveRetornarFalseOuTrue() {
         int idInexistente = 99999;
-        
+
         boolean resultado = professorDAO.DeleteProfessorBD(idInexistente);
-        
+
         // Pode retornar false se não encontrar ou true se executar (mesmo sem linhas afetadas)
         assertTrue(resultado || !resultado);
     }
@@ -164,7 +169,7 @@ class ProfessorDAOTest {
         professor.setContato("47987654321");
         professor.setTitulo("Mestre");
         professor.setSalario(6000.0);
-        
+
         // Se getConexao retornar null, deve lançar RuntimeException
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn == null) {
@@ -177,8 +182,8 @@ class ProfessorDAOTest {
                 boolean resultado = professorDAO.UpdateProfessorBD(professor);
                 assertTrue(resultado || !resultado);
             } catch (RuntimeException e) {
-                assertTrue(e.getMessage().contains("Não foi possível conectar") || 
-                          e.getMessage().contains("SQLException"));
+                assertTrue(e.getMessage().contains("Não foi possível conectar")
+                        || e.getMessage().contains("SQLException"));
             }
         }
     }
@@ -195,7 +200,7 @@ class ProfessorDAOTest {
         professor.setContato("47911111111");
         professor.setTitulo("Doutor");
         professor.setSalario(7000.0);
-        
+
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn != null) {
             try {
@@ -216,12 +221,12 @@ class ProfessorDAOTest {
     @DisplayName("Caso 11: carregaProfessor com conexão null - deve retornar professor com apenas ID")
     void testCarregaProfessor_ConexaoNull_DeveRetornarProfessorComApenasId() {
         int id = 1;
-        
+
         // Se getConexao retornar null, deve retornar professor com apenas ID setado
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn == null) {
             Professor resultado = professorDAO.carregaProfessor(id);
-            
+
             assertNotNull(resultado);
             assertEquals(id, resultado.getId());
             // Outros campos devem estar vazios/null
@@ -237,9 +242,9 @@ class ProfessorDAOTest {
     @DisplayName("Caso 12: carregaProfessor com ID inexistente - deve retornar professor com apenas ID")
     void testCarregaProfessor_IdInexistente_DeveRetornarProfessorComApenasId() {
         int idInexistente = 99999;
-        
+
         Professor resultado = professorDAO.carregaProfessor(idInexistente);
-        
+
         assertNotNull(resultado);
         assertEquals(idInexistente, resultado.getId());
         // Se não encontrar no banco, outros campos devem estar vazios/null
@@ -264,7 +269,7 @@ class ProfessorDAOTest {
     @DisplayName("Caso 14: maiorID - deve retornar valor maior ou igual a zero")
     void testMaiorID_DeveRetornarValorMaiorOuIgualAZero() throws SQLException {
         int resultado = professorDAO.maiorID();
-        
+
         assertTrue(resultado >= 0);
     }
 
@@ -280,7 +285,7 @@ class ProfessorDAOTest {
         professor.setContato("47911111111");
         professor.setTitulo("Doutor");
         professor.setSalario(5000.0);
-        
+
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn != null) {
             try {
@@ -308,7 +313,7 @@ class ProfessorDAOTest {
         professor.setContato(null);
         professor.setTitulo(null);
         professor.setSalario(0.0);
-        
+
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn != null) {
             try {
@@ -334,7 +339,7 @@ class ProfessorDAOTest {
             assertTrue(true); // Teste passa mas não executa o fluxo
             return;
         }
-        
+
         try {
             // 1. Inserir
             Professor professor = new Professor();
@@ -346,25 +351,25 @@ class ProfessorDAOTest {
             professor.setContato("47988888888");
             professor.setTitulo("Doutor");
             professor.setSalario(5000.0);
-            
+
             boolean inserido = professorDAO.InsertProfessorBD(professor);
             assertTrue(inserido);
-            
+
             // 2. Carregar
             Professor carregado = professorDAO.carregaProfessor(100);
             assertNotNull(carregado);
             assertEquals(100, carregado.getId());
-            
+
             // 3. Atualizar
             professor.setNome("Fluxo Completo Atualizado");
             professor.setSalario(8000.0);
             boolean atualizado = professorDAO.UpdateProfessorBD(professor);
             assertTrue(atualizado);
-            
+
             // 4. Deletar
             boolean deletado = professorDAO.DeleteProfessorBD(100);
             assertTrue(deletado);
-            
+
         } catch (RuntimeException e) {
             // Se houver erro SQL, o teste ainda é válido
             assertTrue(e.getMessage().contains("SQLException"));
@@ -379,10 +384,10 @@ class ProfessorDAOTest {
         ProfessorDAO dao1 = new ProfessorDAO();
         @SuppressWarnings("unused")
         ProfessorDAO dao2 = new ProfessorDAO();
-        
+
         // Ambas devem referenciar a mesma lista estática
         assertSame(ProfessorDAO.MinhaLista2, ProfessorDAO.MinhaLista2);
-        
+
         // Limpar após o teste
         ProfessorDAO.MinhaLista2.clear();
     }
@@ -399,7 +404,7 @@ class ProfessorDAOTest {
         professor.setContato("47922222222");
         professor.setTitulo("Mestre");
         professor.setSalario(6000.0);
-        
+
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn != null) {
             try {
@@ -427,7 +432,7 @@ class ProfessorDAOTest {
         professor.setContato("47933333333");
         professor.setTitulo("Especialista");
         professor.setSalario(5500.0);
-        
+
         java.sql.Connection conn = professorDAO.getConexao();
         if (conn != null) {
             try {
@@ -443,4 +448,3 @@ class ProfessorDAOTest {
         }
     }
 }
-

@@ -6,17 +6,65 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
+/**
+ * Tela de login do sistema SisUni.
+ *
+ * <p>
+ * Esta interface permite ao usuário validar a conexão com o banco de dados
+ * SQLite antes de acessar o sistema principal. Após clicar em LOGIN, o sistema
+ * tenta estabelecer conexão utilizando a {@link ConnectionFactory} e, em caso
+ * de sucesso, a tela principal é aberta.
+ * </p>
+ *
+ * <p>
+ * Alguns campos de usuário e senha estão marcados como {@code @Deprecated},
+ * pois não são utilizados neste projeto — o login serve apenas para validar
+ * o acesso ao banco de dados.
+ * </p>
+ */
 public class TelaLogin extends javax.swing.JFrame {
+
+    /**
+     * Campo de senha (não utilizado).
+     *
+     * @deprecated este sistema não utiliza autenticação por usuário e senha.
+     */
 
     @Deprecated
     public static String passwordDB = "";
+
+    /**
+     * Campo de usuário (não utilizado).
+     *
+     * @deprecated este sistema não utiliza autenticação por usuário e senha.
+     */
+
     @Deprecated
     public static String userDB = "";
+
+    /**
+     * Construtor da tela de login.
+     *
+     * <p>
+     * Inicializa os componentes gráficos e define o botão LOGIN como botão
+     * padrão (acionado ao pressionar ENTER).
+     * </p>
+     */
 
     public TelaLogin() {
         initComponents();
         getRootPane().setDefaultButton(this.login);
     }
+
+    /**
+     * Inicializa os componentes da interface gráfica.
+     *
+     * <p>
+     * Este método é gerado automaticamente pelo NetBeans e contém toda a
+     * configuração dos elementos visuais da tela. Não deve ser modificado
+     * manualmente.
+     * </p>
+     */
 
     @SuppressWarnings("unchecked")
     private void initComponents() {
@@ -113,6 +161,16 @@ public class TelaLogin extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }
 
+    /**
+     * Verifica a conexão com o banco de dados SQLite.
+     *
+     * <p>
+     * Tenta estabelecer uma conexão e retorna true se a conexão for bem-sucedida,
+     * false caso contrário. Exibe mensagens de erro apropriadas em caso de falha.
+     * </p>
+     *
+     * @return true se a conexão for bem-sucedida, false caso contrário.
+     */
     private boolean checarConexao() {
         try {
             Connection conexao = ConnectionFactory.getConnection();
@@ -130,6 +188,16 @@ public class TelaLogin extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Ação executada ao clicar no botão LOGIN.
+     *
+     * <p>
+     * Verifica a conexão com o banco de dados e abre a tela principal se a conexão
+     * for bem-sucedida.
+     * </p>
+     *
+     * @param evt evento de clique do botão LOGIN.
+     */
     private void loginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loginActionPerformed
         if (checarConexao()) {
             TelaPrincipal tela = new TelaPrincipal();
@@ -139,7 +207,9 @@ public class TelaLogin extends javax.swing.JFrame {
     }
 
     /**
-     * @param args the command line arguments
+    * Método principal que inicia a tela de login.
+     *
+     * @param args argumentos de linha de comando (não utilizados).
      */
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
