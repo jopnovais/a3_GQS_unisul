@@ -2,9 +2,9 @@ name: Java CI/CD (Dev, HMG, Prod)
 
 on:
   push:
-    branches: ["main", "ghactions-issue49"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "ghactions-issue49"]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
