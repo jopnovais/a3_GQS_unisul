@@ -21,7 +21,7 @@ import java.sql.Statement;
 public class ProfessorDAO {
 
     /** Lista estática utilizada para armazenar objetos Professor recuperados do banco. */
-    public static ArrayList<Professor> MinhaLista2 = new ArrayList<>();
+    public static ArrayList<Professor> MinhaLista2 = new ArrayList<Professor>();
 
     /** Construtor padrão. */
     public ProfessorDAO() {
