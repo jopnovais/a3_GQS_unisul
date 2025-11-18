@@ -2,18 +2,18 @@ name: Java CI/CD (Dev, HMG, Prod)
 
 on:
   push:
-    branches: ["main", "test-workflow"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "test-workflow"]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
 
   #----------------------------------------------
-  # DEV — Compilação simples
+  # 1. DEV — Compilação simples
   #----------------------------------------------
-  DEV:
-    name: DEV - Build
+  build-dev:
+    name: 1. Build (DEV)
     runs-on: ubuntu-latest
 
     steps:
@@ -32,12 +32,12 @@ jobs:
 
 
   #----------------------------------------------
-  # HMG — Executar testes + gerar cobertura + SonarCloud
+  # 2. HMG — Executar testes + gerar cobertura
   #----------------------------------------------
-  HMG:
-    name: HMG - Test + SonarCloud Analysis
+  build-hmg:
+    name: 2. Test (HMG) - Java ${{ matrix.java-version }}
     runs-on: ubuntu-latest
-    needs: DEV
+    needs: build-dev
 
     strategy:
       fail-fast: false
@@ -47,8 +47,6 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configurar JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v4
@@ -67,8 +65,36 @@ jobs:
           path: target/site/jacoco/jacoco.xml
           if-no-files-found: error
 
-      - name: Rodar análise SonarCloud (somente main)
-        if: github.ref == 'refs/heads/main'
+
+  #----------------------------------------------
+  # 3. ANALISAR COM SONARCLOUD (somente main)
+  #----------------------------------------------
+  analyze-sonar:
+    name: 3. SonarCloud Analysis (somente main)
+    runs-on: ubuntu-latest
+    needs: build-hmg
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar JDK 17 (para Sonar)
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "maven"
+
+      - name: Download relatório JaCoCo
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
+
+      - name: Rodar análise Sonar com Quality Gate
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -82,12 +108,12 @@ jobs:
 
 
   #----------------------------------------------
-  # PRD — Empacotamento + Release
+  # 4. PRD — Empacotamento
   #----------------------------------------------
-  PRD:
-    name: PRD - Package + Release
+  build-prd:
+    name: 4. Package (PRD)
     runs-on: ubuntu-latest
-    needs: HMG
+    needs: analyze-sonar
     if: github.ref == 'refs/heads/main'
 
     steps:
@@ -116,14 +142,23 @@ jobs:
           name: projeto-faculdade-jar
           path: staging
 
-      - name: Download do JAR para Release
-        if: github.event_name == 'workflow_dispatch'
+
+  #----------------------------------------------
+  # 5. PROD — Criar Release manual
+  #----------------------------------------------
+  create_release_prod:
+    name: 5. Release (PROD - Manual)
+    runs-on: ubuntu-latest
+    needs: build-prd
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Download do JAR
         uses: actions/download-artifact@v4
         with:
           name: projeto-faculdade-jar
 
-      - name: Criar Release no GitHub (Manual)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Criar Release no GitHub
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
