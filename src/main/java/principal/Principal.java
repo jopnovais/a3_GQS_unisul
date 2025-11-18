@@ -64,7 +64,7 @@ public class Principal {
             } else {
                 JOptionPane.showMessageDialog(null,
                         "Erro ao conectar com o banco de dados SQLite!\n\n"
-                        + "Verifique se há permissões para criar o arquivo 'projeto_faculdade.db'",
+                        + "Verifique se há permissões para criar o arquivo 'db_escola.db'",
                         "Erro de Conexão",
                         JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
